@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>客户管理 - 视联网消防告警运营平台</title>
+
+<link rel="stylesheet" href="../colors_and_type.css">
+<script src="../assets/role-permission.js"></script>
+<style>
+body{font-family:var(--font-sans);background:var(--color-bg);color:var(--color-text-primary);margin:0;overflow:hidden;height:100vh}
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-thumb{background:#c1c1c1;border-radius:4px}
+::-webkit-scrollbar-track{background:transparent}
+.sidebar{width:var(--sidebar-w);min-width:var(--sidebar-w);background:var(--sidebar-bg);height:100vh;display:flex;flex-direction:column;transition:width .25s,transform .25s;overflow:hidden;position:relative;z-index:100}
+.sidebar.collapsed{width:64px;min-width:64px}
+.sidebar.collapsed .sidebar-text,.sidebar.collapsed .group-arrow,.sidebar.collapsed .sidebar-user-info{display:none}
+.sidebar.collapsed .menu-item{justify-content:center;padding-left:0;padding-right:0}
+.sidebar.collapsed .menu-item .menu-icon{margin-right:0}
+.sidebar.collapsed .group-header{justify-content:center;padding-left:0;padding-right:0}
+.sidebar.collapsed .group-header .group-label{display:none}
+.group-header{display:flex;align-items:center;justify-content:space-between;padding:10px 16px 6px;cursor:pointer;color:#8899aa;font-size:12px;font-weight:600;letter-spacing:.5px;user-select:none}
+.group-header:hover{color:#a0b4c8}
+.group-label{flex:1;white-space:nowrap}
+.group-arrow{transition:transform .2s;font-size:10px;color:#667788}
+.group-arrow.open{transform:rotate(90deg)}
+.group-menu{overflow:hidden;transition:max-height .3s ease}
+.group-menu.closed{max-height:0!important}
+.menu-item{display:flex;align-items:center;padding:9px 16px 9px 20px;margin:2px 8px;border-radius:var(--radius-md);color:var(--sidebar-text);text-decoration:none;font-size:var(--text-sm);cursor:pointer;transition:all .15s;white-space:nowrap;border-left:3px solid transparent}
+.menu-item:hover{background:rgba(255,255,255,.08);color:#fff}
+.menu-item.active{background:var(--sidebar-active-bg);color:#fff;font-weight:var(--font-medium);border-left:3px solid #3b82f6}
+.menu-icon{width:18px;height:18px;margin-right:10px;flex-shrink:0;display:flex;align-items:center;justify-content:center}
+.sidebar-text{flex:1;overflow:hidden;text-overflow:ellipsis}
+.sidebar-user{padding:12px 16px;border-top:1px solid rgba(255,255,255,.08);display:flex;align-items:center;gap:10px;margin-top:auto}
+.sidebar-user-avatar{width:32px;height:32px;border-radius:50%;background:var(--color-primary);color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;flex-shrink:0}
+.sidebar-user-info{overflow:hidden}
+.sidebar-user-name{font-size:var(--text-sm);color:#fff;font-weight:var(--font-medium)}
+.sidebar-user-role{font-size:var(--text-xs);color:var(--sidebar-text)}
+.topbar{height:56px;background:var(--color-surface);border-bottom:1px solid var(--color-border);display:flex;align-items:center;padding:0 var(--space-6);gap:var(--space-4);flex-shrink:0}
+.breadcrumb{font-size:var(--text-sm);color:var(--color-text-secondary)}
+.breadcrumb span{color:var(--color-text-muted)}
+.breadcrumb a{color:var(--color-text-secondary);text-decoration:none}
+.breadcrumb a:hover{color:var(--color-primary)}
+.topbar-search{position:relative}
+.topbar-search input{width:220px;height:34px;border:1px solid var(--color-border);border-radius:var(--radius-md);padding:0 12px 0 34px;font-size:var(--text-sm);background:var(--color-bg);outline:none;transition:border-color .2s}
+.topbar-search input:focus{border-color:var(--color-primary)}
+.topbar-search svg{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--color-text-muted)}
+.bell-btn{position:relative;width:34px;height:34px;display:flex;align-items:center;justify-content:center;border-radius:var(--radius-md);border:1px solid var(--color-border);background:var(--color-surface);cursor:pointer;transition:all .15s}
+.bell-btn:hover{background:var(--color-bg);border-color:var(--color-primary)}
+.bell-badge{position:absolute;top:-4px;right:-4px;background:var(--state-error);color:#fff;font-size:10px;font-weight:700;min-width:16px;height:16px;border-radius:8px;display:flex;align-items:center;justify-content:center;padding:0 4px}
+.bell-dropdown{position:absolute;top:100%;right:0;margin-top:4px;width:320px;background:var(--color-surface);border:1px solid var(--color-border);border-radius:var(--radius-lg);box-shadow:var(--shadow-lg);z-index:400;display:none}
+.bell-dropdown.show{display:block}
+.bell-dd-header{padding:12px 16px;border-bottom:1px solid var(--color-border-light);font-size:var(--text-sm);font-weight:var(--font-semibold)}
+.bell-dd-item{display:flex;align-items:flex-start;gap:10px;padding:10px 16px;border-bottom:1px solid var(--color-border-light);cursor:pointer;transition:background .1s}
+.bell-dd-item:last-child{border-bottom:none}
+.bell-dd-item:hover{background:var(--color-bg)}
+.bell-dd-dot{width:8px;height:8px;border-radius:50%;background:var(--state-error);margin-top:4px;flex-shrink:0}
+.bell-dd-text{font-size:var(--text-sm);color:var(--color-text-primary);line-height:1.4}
+.bell-dd-time{font-size:var(--text-xs);color:var(--color-text-muted);margin-top:2px}
+.user-dropdown{position:relative;cursor:pointer;display:flex;align-items:center;gap:8px;padding:4px 10px;border-radius:var(--radius-md);transition:background .15s}
+.user-dropdown:hover{background:var(--color-bg)}
+.user-avatar{width:30px;height:30px;border-radius:50%;background:var(--color-primary);color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600}
+.user-dd-menu{position:absolute;top:100%;right:0;margin-top:4px;width:150px;background:var(--color-surface);border:1px solid var(--color-border);border-radius:var(--radius-md);box-shadow:var(--shadow-lg);z-index:400;display:none}
+.user-dd-menu.show{display:block}
+.user-dd-item{padding:8px 14px;font-size:var(--text-sm);cursor:pointer;transition:background .1s;color:var(--color-text-primary)}
+.user-dd-item:hover{background:var(--color-bg)}
+.content-area{flex:1;overflow-y:auto;padding:var(--space-6)}
+.toast-container{position:fixed;top:70px;right:24px;z-index:700;display:flex;flex-direction:column;gap:8px}
+.toast{padding:12px 20px;border-radius:var(--radius-md);font-size:var(--text-sm);font-weight:var(--font-medium);box-shadow:var(--shadow-lg);display:flex;align-items:center;gap:8px;animation:toastIn .3s ease;min-width:240px}
+.toast.success{background:var(--state-success-bg);color:var(--state-success);border:1px solid rgba(22,163,74,.2)}
+.toast.error{background:var(--state-error-bg);color:var(--state-error);border:1px solid rgba(220,38,38,.2)}
+.toast.info{background:var(--state-info-bg);color:var(--state-info);border:1px solid rgba(59,130,246,.2)}
+@keyframes toastIn{from{opacity:0;transform:translateX(40px)}to{opacity:1;transform:translateX(0)}}
+.page-header{margin-bottom:var(--space-6)}
+.page-title{font-size:var(--text-xl);font-weight:var(--font-bold);color:var(--color-text-primary);margin:0 0 4px}
+.page-desc{font-size:var(--text-sm);color:var(--color-text-secondary);margin:0}
+.page-card{background:var(--color-surface);border-radius:var(--radius-lg);padding:var(--space-6);box-shadow:var(--shadow-sm);margin-bottom:var(--space-6)}
+.filter-bar{display:flex;flex-wrap:wrap;gap:var(--space-3);align-items:center;margin-bottom:var(--space-4)}
+.filter-group{display:flex;flex-direction:column;gap:4px}
+.filter-label{font-size:12px;color:var(--color-text-secondary);font-weight:500}
+.filter-select,.filter-input{height:34px;border:1px solid var(--color-border);border-radius:var(--radius-md);padding:0 10px;font-size:var(--text-sm);background:var(--color-surface);color:var(--color-text-primary);outline:none;min-width:140px;transition:border-color .2s}
+.filter-select:focus,.filter-input:focus{border-color:var(--color-primary)}
+.filter-input{min-width:180px}
+.data-table{width:100%;border-collapse:collapse;font-size:var(--text-sm)}
+.data-table thead{background:var(--color-bg);position:sticky;top:0;z-index:5}
+.data-table th{padding:10px 12px;text-align:left;font-weight:500;color:var(--color-text-secondary);border-bottom:2px solid var(--color-border);white-space:nowrap}
+.data-table td{padding:10px 12px;border-bottom:1px solid var(--color-border-light);vertical-align:middle}
+.data-table tbody tr{transition:background .12s;cursor:pointer}
+.data-table tbody tr:hover{background:var(--color-primary-bg)}
+.status-tag{display:inline-flex;align-items:center;gap:4px;padding:2px 10px;border-radius:99px;font-size:12px;font-weight:500}
+.status-tag.green{background:var(--state-success-bg);color:var(--state-success)}
+.status-tag.orange{background:var(--state-warning-bg);color:var(--state-warning)}
+.status-tag.red{background:var(--state-error-bg);color:var(--state-error)}
+.status-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.status-dot.green{background:var(--state-success)}
+.status-dot.orange{background:var(--state-warning)}
+.status-dot.red{background:var(--state-error)}
+.action-link{color:var(--color-primary);font-size:var(--text-sm);cursor:pointer;text-decoration:none}
+.action-link:hover{text-decoration:underline}
+.action-link.danger{color:var(--state-error)}
+.btn-sm{height:32px;padding:0 14px;border-radius:var(--radius-md);font-size:var(--text-sm);font-weight:500;cursor:pointer;border:none;transition:all .15s;display:inline-flex;align-items:center;gap:6px}
+.btn-primary{background:var(--color-primary);color:#fff}
+.btn-primary:hover{background:var(--color-primary-light)}
+.dialog-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:600;display:none;align-items:center;justify-content:center}
+.dialog-overlay.show{display:flex}
+.dialog{background:var(--color-surface);border-radius:var(--radius-lg);box-shadow:var(--shadow-lg);width:520px;max-width:90vw;max-height:80vh;overflow-y:auto}
+.dialog-header{padding:16px 20px;border-bottom:1px solid var(--color-border);font-size:var(--text-lg);font-weight:var(--font-semibold);display:flex;align-items:center;justify-content:space-between}
+.dialog-close{width:28px;height:28px;border-radius:var(--radius-sm);border:none;background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--color-text-muted);transition:background .15s}
+.dialog-close:hover{background:var(--color-bg);color:var(--color-text-primary)}
+.dialog-body{padding:20px}
+.dialog-footer{padding:12px 20px;border-top:1px solid var(--color-border);display:flex;justify-content:flex-end;gap:var(--space-3)}
+.dialog-label{font-size:var(--text-sm);font-weight:var(--font-medium);margin-bottom:6px;color:var(--color-text-primary)}
+.dialog-input{width:100%;height:36px;border:1px solid var(--color-border);border-radius:var(--radius-md);padding:0 12px;font-size:var(--text-sm);outline:none;background:var(--color-surface);transition:border-color .2s}
+.dialog-input:focus{border-color:var(--color-primary)}
+.dialog-select{width:100%;height:36px;border:1px solid var(--color-border);border-radius:var(--radius-md);padding:0 10px;font-size:var(--text-sm);outline:none;background:var(--color-surface);cursor:pointer}
+.dialog-select:focus{border-color:var(--color-primary)}
+.dialog-textarea{width:100%;min-height:60px;border:1px solid var(--color-border);border-radius:var(--radius-md);padding:8px 12px;font-size:var(--text-sm);resize:vertical;outline:none;font-family:var(--font-sans);transition:border-color .2s}
+.dialog-textarea:focus{border-color:var(--color-primary)}
+.btn-cancel{height:34px;padding:0 20px;border:1px solid var(--color-border);border-radius:var(--radius-md);background:var(--color-surface);font-size:var(--text-sm);cursor:pointer;transition:all .15s;color:var(--color-text-primary)}
+.btn-cancel:hover{background:var(--color-bg)}
+.btn-confirm{height:34px;padding:0 20px;border:none;border-radius:var(--radius-md);font-size:var(--text-sm);font-weight:var(--font-semibold);cursor:pointer;transition:all .15s;color:#fff;background:var(--color-primary)}
+.btn-confirm:hover{filter:brightness(1.08)}
+.pagination{display:flex;align-items:center;justify-content:flex-end;gap:var(--space-3);padding:var(--space-4) 0;font-size:var(--text-sm);color:var(--color-text-secondary)}
+.pagination-info{margin-right:auto}
+.form-row{display:flex;gap:var(--space-4)}
+.form-row>.form-field{flex:1}
+.form-field{margin-bottom:16px}
+.date-range{display:flex;align-items:center;gap:8px}
+.date-range input{flex:1}
+.date-range span{color:var(--color-text-muted);font-size:var(--text-sm)}
+.factory-switcher{display:flex;align-items:center;gap:6px;padding:4px 10px;border-radius:var(--radius-md);cursor:pointer;transition:background .15s;font-size:var(--text-sm);color:var(--color-text-secondary)}
+.factory-switcher:hover{background:var(--color-bg)}
+.factory-dropdown{position:absolute;top:100%;right:0;margin-top:4px;width:180px;background:var(--color-surface);border:1px solid var(--color-border);border-radius:var(--radius-md);box-shadow:var(--shadow-lg);z-index:400;display:none}
+.factory-dropdown.show{display:block}
+.factory-dd-item{padding:8px 14px;font-size:var(--text-sm);cursor:pointer;transition:background .1s;color:var(--color-text-primary)}
+.factory-dd-item:hover{background:var(--color-bg)}
+.factory-dd-item.active{color:var(--color-primary);font-weight:var(--font-medium)}
+</style>
+</head>
+<body>
+<div style="display:flex;height:100vh;overflow:hidden">
+<aside class="sidebar" id="sidebar">
+<div style="padding:14px 16px;display:flex;align-items:center;gap:10px;border-bottom:1px solid rgba(255,255,255,.08)">
+<div style="width:32px;height:32px;background:var(--color-primary);border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg></div>
+<span style="color:#fff;font-size:var(--text-base);font-weight:var(--font-semibold);white-space:nowrap">消防告警平台</span>
+</div>
+<nav style="flex:1;overflow-y:auto;padding:8px 0">
+<div onclick="toggleMenuGroup(this)" class="group-header"><span class="group-label">概览</span><span class="group-arrow">&#9654;</span></div>
+<div class="group-menu">
+<a href="javascript:void(0)" class="menu-item" onclick="navTo('dashboard.html')"><span class="menu-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></span><span class="sidebar-text">可视化大屏</span></a>
+</div>
+<div onclick="toggleMenuGroup(this)" class="group-header"><span class="group-label">告警管理</span><span class="group-arrow">&#9654;</span></div>
+<div class="group-menu">
+<a href="javascript:void(0)" class="menu-item" onclick="navTo('alarm-management.html')"><span class="menu-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg></span><span class="sidebar-text">告警中心</span></a>
+<a href="javascript:void(0)" class="menu-item" onclick="navTo('alarm-notification.html')"><span class="menu-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg></span><span class="sidebar-text">告警提示配置</span></a>
+</div>
+<div onclick="toggleMenuGroup(this)" class="group-header"><span class="group-label">运营管理</span><span class="group-arrow">&#9654;</span></div>
+<div class="group-menu">
+<a href="javascript:void(0)" class="menu-item" onclick="navTo('ops-review.html')"><span class="menu-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg></span><span class="sidebar-text">运营审核</span></a>
+<a href="javascript:void(0)" class="menu-item" onclick="navTo('audit-mgmt.html')"><span class="menu-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg></span><span class="sidebar-text">审核配置</span></a>
+                            <a href="javascript:void(0)" class="menu-item" onclick="navTo('audit-history.html')"><span class="menu-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg></span><span class="sidebar-text">历史审核</span></a>
+</div>
+<div onclick="toggleMenuGroup(this)" class="group-header"><span class="group-label">视频管理</span><span class="group-arrow">&#9654;</span></div>
+<div class="group-menu">
+<a href="javascript:void(0)" class="menu-item" onclick="navTo('video.html')"><span class="menu-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg></span><span class="sidebar-text">实时视频</span></a>
+<a href="javascript:void(0)" class="menu-item" onclick="navTo('video-rotation.html')"><span class="menu-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg></span><span class="sidebar-text">轮播配置</span></a>
+</div>
+<div onclick="toggleMenuGroup(this)" class="group-header"><span class="group-label">系统管理</span><span class="group-arrow">&#9654;</span></div>
+<div class="group-menu">
+<a href="javascript:void(0)" class="menu-item" onclick="navTo('user-mgmt.html')"><span class="menu-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span><span class="sidebar-text">用户管理</span></a>
+<a href="javascript:void(0)" class="menu-item" onclick="navTo('role-mgmt.html')"><span class="menu-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></span><span class="sidebar-text">角色管理</span></a>
+<a href="javascript:void(0)" class="menu-item" onclick="navTo('org-mgmt.html')"><span class="menu-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/></svg></span><span class="sidebar-text">组织机构管理</span></a>
+<a href="javascript:void(0)" class="menu-item active" onclick="navTo('tenant-mgmt.html')"><span class="menu-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg></span><span class="sidebar-text">客户管理</span></a>
+<a href="javascript:void(0)" class="menu-item" onclick="navTo('device-mgmt.html')"><span class="menu-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg></span><span class="sidebar-text">设备管理</span></a>
+</div>
+</nav>
+<div class="sidebar-user">
+<div class="sidebar-user-avatar" id="userAvatar">管</div>
+<div class="sidebar-user-info">
+<div class="sidebar-user-name" id="userNameDisplay">系统管理员</div>
+<div class="sidebar-user-role" id="userRoleDisplay">系统管理员</div>
+</div>
+</div>
+</aside>
+<div style="flex:1;display:flex;flex-direction:column;overflow:hidden">
+<header class="topbar">
+<button onclick="toggleSidebar()" style="width:34px;height:34px;display:flex;align-items:center;justify-content:center;border-radius:var(--radius-md);border:1px solid var(--color-border);background:var(--color-surface);cursor:pointer"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
+<div class="breadcrumb"><a href="javascript:void(0)" onclick="navTo('dashboard.html')">首页</a> <span>/</span> 系统管理 <span>/</span> 客户管理</div>
+<div class="topbar-search"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input placeholder="搜索客户..."></div>
+<div style="flex:1"></div>
+<div class="bell-btn" onclick="toggleBell(event)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg><span class="bell-badge">12</span></div>
+<div class="bell-dropdown" id="bellDropdown"><div class="bell-dd-header">通知中心</div><div class="bell-dd-item"><span class="bell-dd-dot"></span><div><div class="bell-dd-text">杭州萧山消防器材厂 - 烟雾浓度超标告警</div><div class="bell-dd-time">2分钟前</div></div></div><div class="bell-dd-item"><span class="bell-dd-dot"></span><div><div class="bell-dd-text">宁波北仑化工厂 - 温度异常告警</div><div class="bell-dd-time">15分钟前</div></div></div></div>
+<div class="user-dropdown" onclick="toggleUser(event)">
+<div class="user-avatar" id="topbarUserAvatar">管</div>
+<span id="topbarUserName" style="font-size:var(--text-sm);color:var(--color-text-primary)">系统管理员</span>
+<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+</div>
+<div class="user-dd-menu" id="userDropdown">
+<div class="user-dd-item" onclick="RolePermission.logout()" style="color:var(--state-error)">退出登录</div>
+</div>
+</header>
+<main class="content-area">
+<div class="page-header">
+  <h1 class="page-title">客户管理</h1>
+  <p class="page-desc">管理平台客户信息，配置客户工厂接入及服务范围</p>
+</div>
+
+<!-- Filter Bar -->
+<div class="page-card" style="padding:16px 20px">
+  <div class="filter-bar" style="margin-bottom:0">
+    <div class="filter-group">
+      <label class="filter-label">状态</label>
+      <select class="filter-select" id="filterStatus">
+        <option value="">全部</option>
+        <option value="正常">正常</option>
+        <option value="过期">过期</option>
+        <option value="停用">停用</option>
+      </select>
+    </div>
+    <div class="filter-group">
+      <label class="filter-label">行业</label>
+      <select class="filter-select" id="filterIndustry">
+        <option value="">全部行业</option>
+        <option value="消防器材">消防器材</option>
+        <option value="化工">化工</option>
+        <option value="电子">电子</option>
+        <option value="纺织">纺织</option>
+        <option value="建材">建材</option>
+        <option value="家具">家具</option>
+      </select>
+    </div>
+    <div class="filter-group">
+      <label class="filter-label">关键词</label>
+      <input class="filter-input" id="filterKeyword" placeholder="客户名称/信用代码">
+    </div>
+    <div style="display:flex;gap:8px;align-self:flex-end">
+      <button class="btn-sm btn-primary" onclick="filterTenants()">搜索</button>
+      <button class="btn-sm btn-primary" style="background:var(--state-success)" onclick="openTenantDialog()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        新增客户
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Tenant Table -->
+<div class="page-card" style="padding:0;overflow:hidden">
+  <div style="overflow-x:auto">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>客户名称</th>
+          <th>统一社会信用代码</th>
+          <th>所属区域</th>
+          <th>行业</th>
+          <th>设备数</th>
+          <th>状态</th>
+          <th>服务到期日</th>
+          <th style="width:200px">操作</th>
+        </tr>
+      </thead>
+      <tbody id="tenantTableBody"></tbody>
+    </table>
+  </div>
+  <div class="pagination">
+    <span class="pagination-info">共 <span id="totalCount">6</span> 条</span>
+    <span>第 <span id="currentPage">1</span>/<span id="totalPage">1</span> 页</span>
+  </div>
+</div>
+
+</main>
+</div>
+</div>
+
+<!-- Add/Edit Tenant Dialog -->
+<div class="dialog-overlay" id="tenantDialogOverlay">
+  <div class="dialog" style="width:560px">
+    <div class="dialog-header">
+      <span id="tenantDialogTitle">新增客户</span>
+      <button class="dialog-close" onclick="closeTenantDialog()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="dialog-body">
+      <div class="form-field">
+        <div class="dialog-label">客户名称</div>
+        <input class="dialog-input" id="dialogTenantName" placeholder="请输入客户名称">
+      </div>
+      <div class="form-field">
+        <div class="dialog-label">统一社会信用代码</div>
+        <input class="dialog-input" id="dialogCreditCode" placeholder="请输入统一社会信用代码">
+      </div>
+      <div class="form-row">
+        <div class="form-field">
+          <div class="dialog-label">所属区域</div>
+          <select class="dialog-select" id="dialogRegion">
+            <option value="杭州市">杭州市</option>
+            <option value="宁波市">宁波市</option>
+            <option value="温州市">温州市</option>
+            <option value="嘉兴市">嘉兴市</option>
+            <option value="绍兴市">绍兴市</option>
+            <option value="金华市">金华市</option>
+          </select>
+        </div>
+        <div class="form-field">
+          <div class="dialog-label">行业</div>
+          <select class="dialog-select" id="dialogIndustry">
+            <option value="消防器材">消防器材</option>
+            <option value="化工">化工</option>
+            <option value="电子">电子</option>
+            <option value="纺织">纺织</option>
+            <option value="建材">建材</option>
+            <option value="家具">家具</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-field">
+        <div class="dialog-label">服务期限</div>
+        <div class="date-range">
+          <input class="dialog-input" type="date" id="dialogStartDate">
+          <span>至</span>
+          <input class="dialog-input" type="date" id="dialogEndDate">
+        </div>
+      </div>
+      <div>
+        <div class="dialog-label">备注</div>
+        <textarea class="dialog-textarea" id="dialogRemark" placeholder="请输入备注信息"></textarea>
+      </div>
+    </div>
+    <div class="dialog-footer">
+      <button class="btn-cancel" onclick="closeTenantDialog()">取消</button>
+      <button class="btn-confirm" onclick="saveTenant()">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- Renew Dialog -->
+<div class="dialog-overlay" id="renewDialogOverlay">
+  <div class="dialog" style="width:440px">
+    <div class="dialog-header">
+      <span>客户续期</span>
+      <button class="dialog-close" onclick="closeRenewDialog()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="dialog-body">
+      <div class="form-field">
+        <div class="dialog-label">客户名称</div>
+        <input class="dialog-input" id="renewTenantName" readonly style="background:var(--color-bg);color:var(--color-text-secondary)">
+      </div>
+      <div class="form-field">
+        <div class="dialog-label">当前到期日</div>
+        <input class="dialog-input" id="renewCurrentDate" readonly style="background:var(--color-bg);color:var(--color-text-secondary)">
+      </div>
+      <div class="form-field">
+        <div class="dialog-label">续期时长</div>
+        <select class="dialog-select" id="renewDuration" onchange="calcRenewDate()">
+          <option value="1">1年</option>
+          <option value="2">2年</option>
+          <option value="3">3年</option>
+        </select>
+      </div>
+      <div class="form-field">
+        <div class="dialog-label">续期后到期日</div>
+        <input class="dialog-input" id="renewNewDate" readonly style="background:var(--color-primary-bg);color:var(--color-primary);font-weight:var(--font-semibold)">
+      </div>
+    </div>
+    <div class="dialog-footer">
+      <button class="btn-cancel" onclick="closeRenewDialog()">取消</button>
+      <button class="btn-confirm" onclick="confirmRenew()">确认续期</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast-container" id="toastContainer"></div>
+<script>
+function toggleSidebar(){document.getElementById('sidebar').classList.toggle('collapsed')}
+function toggleMenuGroup(h){var a=h.querySelector('.group-arrow'),m=h.nextElementSibling;if(m){m.classList.toggle('closed');a.classList.toggle('open')}}
+function toggleBell(e){e.stopPropagation();document.getElementById('bellDropdown').classList.toggle('show');document.getElementById('userDropdown').classList.remove('show')}
+function toggleUser(e){e.stopPropagation();document.getElementById('userDropdown').classList.toggle('show');document.getElementById('bellDropdown').classList.remove('show')}
+document.addEventListener('click',function(){var bd=document.getElementById('bellDropdown');if(bd)bd.classList.remove('show');var ud=document.getElementById('userDropdown');if(ud)ud.classList.remove('show')});
+
+var tenants = [
+  {name:'杭州萧山消防器材厂',credit:'91330109MA2XXXXX',region:'杭州市',industry:'消防器材',devices:32,status:'正常',expiry:'2027-06-30'},
+  {name:'宁波北仑化工厂',credit:'91330206MA1XXXXX',region:'宁波市',industry:'化工',devices:48,status:'正常',expiry:'2027-03-15'},
+  {name:'温州龙湾电子厂',credit:'91330303MA3XXXXX',region:'温州市',industry:'电子',devices:25,status:'正常',expiry:'2027-01-20'},
+  {name:'嘉兴南湖纺织厂',credit:'91330402MA4XXXXX',region:'嘉兴市',industry:'纺织',devices:18,status:'过期',expiry:'2026-05-01'},
+  {name:'绍兴越城建材厂',credit:'91330602MA5XXXXX',region:'绍兴市',industry:'建材',devices:22,status:'停用',expiry:'2026-08-15'},
+  {name:'金华婺城家具厂',credit:'91330702MA6XXXXX',region:'金华市',industry:'家具',devices:15,status:'正常',expiry:'2027-09-30'}
+];
+
+var editingTenant = null;
+var renewingIdx = null;
+
+function renderTenantTable(){
+  var statusFilter = document.getElementById('filterStatus').value;
+  var industryFilter = document.getElementById('filterIndustry').value;
+  var keyword = document.getElementById('filterKeyword').value.trim().toLowerCase();
+  var filtered = tenants.filter(function(t){
+    if(statusFilter && t.status!==statusFilter) return false;
+    if(industryFilter && t.industry!==industryFilter) return false;
+    if(keyword && t.name.toLowerCase().indexOf(keyword)===-1 && t.credit.toLowerCase().indexOf(keyword)===-1) return false;
+    return true;
+  });
+  var html = '';
+  filtered.forEach(function(t,idx){
+    var statusCls = t.status==='正常'?'green':t.status==='过期'?'orange':'red';
+    var statusHtml = '<span class="status-tag '+statusCls+'"><span class="status-dot '+statusCls+'"></span>'+t.status+'</span>';
+    html += '<tr>';
+    html += '<td style="font-weight:500">'+t.name+'</td>';
+    html += '<td style="font-family:monospace;font-size:var(--text-xs);color:var(--color-text-secondary)">'+t.credit+'</td>';
+    html += '<td>'+t.region+'</td>';
+    html += '<td>'+t.industry+'</td>';
+    html += '<td>'+t.devices+'</td>';
+    html += '<td>'+statusHtml+'</td>';
+    html += '<td style="color:var(--color-text-secondary)">'+t.expiry+'</td>';
+    html += '<td>';
+    html += '<a class="action-link" onclick="viewTenant('+idx+')">查看</a> ';
+    html += '<a class="action-link" onclick="editTenant('+idx+')">编辑</a> ';
+    html += '<a class="action-link" onclick="openRenewDialog('+idx+')">续期</a> ';
+    if(t.status==='停用'){
+      html += '<a class="action-link" onclick="toggleTenantStatus('+idx+')">启用</a>';
+    } else {
+      html += '<a class="action-link danger" onclick="toggleTenantStatus('+idx+')">停用</a>';
+    }
+    html += '</td></tr>';
+  });
+  document.getElementById('tenantTableBody').innerHTML = html;
+  document.getElementById('totalCount').textContent = filtered.length;
+}
+
+function filterTenants(){renderTenantTable();}
+
+function viewTenant(idx){
+  showToast('客户详情: '+tenants[idx].name,'info');
+}
+
+function openTenantDialog(tenant){
+  editingTenant = tenant || null;
+  if(tenant){
+    document.getElementById('tenantDialogTitle').textContent = '编辑客户';
+    document.getElementById('dialogTenantName').value = tenant.name;
+    document.getElementById('dialogCreditCode').value = tenant.credit;
+    document.getElementById('dialogRegion').value = tenant.region;
+    document.getElementById('dialogIndustry').value = tenant.industry;
+    document.getElementById('dialogEndDate').value = tenant.expiry;
+    document.getElementById('dialogRemark').value = '';
+  } else {
+    document.getElementById('tenantDialogTitle').textContent = '新增客户';
+    document.getElementById('dialogTenantName').value = '';
+    document.getElementById('dialogCreditCode').value = '';
+    document.getElementById('dialogRegion').selectedIndex = 0;
+    document.getElementById('dialogIndustry').selectedIndex = 0;
+    document.getElementById('dialogStartDate').value = '';
+    document.getElementById('dialogEndDate').value = '';
+    document.getElementById('dialogRemark').value = '';
+  }
+  document.getElementById('tenantDialogOverlay').classList.add('show');
+}
+
+function closeTenantDialog(){
+  document.getElementById('tenantDialogOverlay').classList.remove('show');
+  editingTenant = null;
+}
+
+function editTenant(idx){
+  openTenantDialog(tenants[idx]);
+}
+
+function saveTenant(){
+  var name = document.getElementById('dialogTenantName').value.trim();
+  var credit = document.getElementById('dialogCreditCode').value.trim();
+  var region = document.getElementById('dialogRegion').value;
+  var industry = document.getElementById('dialogIndustry').value;
+  var endDate = document.getElementById('dialogEndDate').value;
+  if(!name||!credit){showToast('请填写完整信息','error');return;}
+  if(editingTenant){
+    editingTenant.name = name;
+    editingTenant.credit = credit;
+    editingTenant.region = region;
+    editingTenant.industry = industry;
+    if(endDate) editingTenant.expiry = endDate;
+    showToast('客户已更新','success');
+  } else {
+    tenants.push({name:name,credit:credit,region:region,industry:industry,devices:0,status:'正常',expiry:endDate||'2027-12-31'});
+    showToast('客户已创建','success');
+  }
+  closeTenantDialog();
+  renderTenantTable();
+}
+
+function openRenewDialog(idx){
+  renewingIdx = idx;
+  var t = tenants[idx];
+  document.getElementById('renewTenantName').value = t.name;
+  document.getElementById('renewCurrentDate').value = t.expiry;
+  document.getElementById('renewDuration').selectedIndex = 0;
+  calcRenewDate();
+  document.getElementById('renewDialogOverlay').classList.add('show');
+}
+
+function closeRenewDialog(){
+  document.getElementById('renewDialogOverlay').classList.remove('show');
+  renewingIdx = null;
+}
+
+function calcRenewDate(){
+  var current = document.getElementById('renewCurrentDate').value;
+  if(!current) return;
+  var years = parseInt(document.getElementById('renewDuration').value) || 1;
+  var d = new Date(current);
+  d.setFullYear(d.getFullYear() + years);
+  document.getElementById('renewNewDate').value = d.toISOString().slice(0,10);
+}
+
+function confirmRenew(){
+  if(renewingIdx===null) return;
+  var newDate = document.getElementById('renewNewDate').value;
+  tenants[renewingIdx].expiry = newDate;
+  if(tenants[renewingIdx].status==='过期') tenants[renewingIdx].status = '正常';
+  closeRenewDialog();
+  renderTenantTable();
+  showToast('续期成功，到期日已更新为 '+newDate,'success');
+}
+
+function toggleTenantStatus(idx){
+  tenants[idx].status = tenants[idx].status==='停用'?'正常':'停用';
+  showToast('客户状态已更新','success');
+  renderTenantTable();
+}
+
+function showToast(msg,type){
+  var container=document.getElementById('toastContainer');
+  var t=document.createElement('div');
+  t.className='toast '+(type||'info');
+  t.innerHTML='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg><span>'+msg+'</span>';
+  container.appendChild(t);
+  setTimeout(function(){t.remove();},2500);
+}
+
+renderTenantTable();
+
+var curUser=localStorage.getItem('fp_user')||'系统管理员';
+var el1=document.getElementById('topbarUserName');if(el1)el1.textContent=curUser;
+var el2=document.getElementById('userAvatar');if(el2)el2.textContent=curUser.charAt(0);
+var el3=document.getElementById('userNameDisplay');if(el3)el3.textContent=curUser;
+var el4=document.getElementById('topbarUserAvatar');if(el4)el4.textContent=curUser.charAt(0);
+function navTo(url){window.location.href=url}
+</script>
+</body>
+</html>

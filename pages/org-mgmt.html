@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>组织机构管理 - 视联网消防告警运营平台</title>
+
+<link rel="stylesheet" href="../colors_and_type.css">
+<script src="../assets/role-permission.js"></script>
+<style>
+body{font-family:var(--font-sans);background:var(--color-bg);color:var(--color-text-primary);margin:0;overflow:hidden;height:100vh}
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-thumb{background:#c1c1c1;border-radius:4px}
+::-webkit-scrollbar-track{background:transparent}
+.sidebar{width:var(--sidebar-w);min-width:var(--sidebar-w);background:var(--sidebar-bg);height:100vh;display:flex;flex-direction:column;transition:width .25s,transform .25s;overflow:hidden;position:relative;z-index:100}
+.sidebar.collapsed{width:64px;min-width:64px}
+.sidebar.collapsed .sidebar-text,.sidebar.collapsed .group-arrow,.sidebar.collapsed .sidebar-user-info{display:none}
+.sidebar.collapsed .menu-item{justify-content:center;padding-left:0;padding-right:0}
+.sidebar.collapsed .menu-item .menu-icon{margin-right:0}
+.sidebar.collapsed .group-header{justify-content:center;padding-left:0;padding-right:0}
+.sidebar.collapsed .group-header .group-label{display:none}
+.group-header{display:flex;align-items:center;justify-content:space-between;padding:10px 16px 6px;cursor:pointer;color:#8899aa;font-size:12px;font-weight:600;letter-spacing:.5px;user-select:none}
+.group-header:hover{color:#a0b4c8}
+.group-label{flex:1;white-space:nowrap}
+.group-arrow{transition:transform .2s;font-size:10px;color:#667788}
+.group-arrow.open{transform:rotate(90deg)}
+.group-menu{overflow:hidden;transition:max-height .3s ease}
+.group-menu.closed{max-height:0!important}
+.menu-item{display:flex;align-items:center;padding:9px 16px 9px 20px;margin:2px 8px;border-radius:var(--radius-md);color:var(--sidebar-text);text-decoration:none;font-size:var(--text-sm);cursor:pointer;transition:all .15s;white-space:nowrap;border-left:3px solid transparent}
+.menu-item:hover{background:rgba(255,255,255,.08);color:#fff}
+.menu-item.active{background:var(--sidebar-active-bg);color:#fff;font-weight:var(--font-medium);border-left:3px solid #3b82f6}
+.menu-icon{width:18px;height:18px;margin-right:10px;flex-shrink:0;display:flex;align-items:center;justify-content:center}
+.sidebar-text{flex:1;overflow:hidden;text-overflow:ellipsis}
+.sidebar-user{padding:12px 16px;border-top:1px solid rgba(255,255,255,.08);display:flex;align-items:center;gap:10px;margin-top:auto}
+.sidebar-user-avatar{width:32px;height:32px;border-radius:50%;background:var(--color-primary);color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;flex-shrink:0}
+.sidebar-user-info{overflow:hidden}
+.sidebar-user-name{font-size:var(--text-sm);color:#fff;font-weight:var(--font-medium)}
+.sidebar-user-role{font-size:var(--text-xs);color:var(--sidebar-text)}
+.topbar{height:56px;background:var(--color-surface);border-bottom:1px solid var(--color-border);display:flex;align-items:center;padding:0 var(--space-6);gap:var(--space-4);flex-shrink:0}
+.breadcrumb{font-size:var(--text-sm);color:var(--color-text-secondary)}
+.breadcrumb span{color:var(--color-text-muted)}
+.breadcrumb a{color:var(--color-text-secondary);text-decoration:none}
+.breadcrumb a:hover{color:var(--color-primary)}
+.topbar-search{position:relative}
+.topbar-search input{width:220px;height:34px;border:1px solid var(--color-border);border-radius:var(--radius-md);padding:0 12px 0 34px;font-size:var(--text-sm);background:var(--color-bg);outline:none;transition:border-color .2s}
+.topbar-search input:focus{border-color:var(--color-primary)}
+.topbar-search svg{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--color-text-muted)}
+.bell-btn{position:relative;width:34px;height:34px;display:flex;align-items:center;justify-content:center;border-radius:var(--radius-md);border:1px solid var(--color-border);background:var(--color-surface);cursor:pointer;transition:all .15s}
+.bell-btn:hover{background:var(--color-bg);border-color:var(--color-primary)}
+.bell-badge{position:absolute;top:-4px;right:-4px;background:var(--state-error);color:#fff;font-size:10px;font-weight:700;min-width:16px;height:16px;border-radius:8px;display:flex;align-items:center;justify-content:center;padding:0 4px}
+.bell-dropdown{position:absolute;top:100%;right:0;margin-top:4px;width:320px;background:var(--color-surface);border:1px solid var(--color-border);border-radius:var(--radius-lg);box-shadow:var(--shadow-lg);z-index:400;display:none}
+.bell-dropdown.show{display:block}
+.bell-dd-header{padding:12px 16px;border-bottom:1px solid var(--color-border-light);font-size:var(--text-sm);font-weight:var(--font-semibold)}
+.bell-dd-item{display:flex;align-items:flex-start;gap:10px;padding:10px 16px;border-bottom:1px solid var(--color-border-light);cursor:pointer;transition:background .1s}
+.bell-dd-item:last-child{border-bottom:none}
+.bell-dd-item:hover{background:var(--color-bg)}
+.bell-dd-dot{width:8px;height:8px;border-radius:50%;background:var(--state-error);margin-top:4px;flex-shrink:0}
+.bell-dd-text{font-size:var(--text-sm);color:var(--color-text-primary);line-height:1.4}
+.bell-dd-time{font-size:var(--text-xs);color:var(--color-text-muted);margin-top:2px}
+.user-dropdown{position:relative;cursor:pointer;display:flex;align-items:center;gap:8px;padding:4px 10px;border-radius:var(--radius-md);transition:background .15s}
+.user-dropdown:hover{background:var(--color-bg)}
+.user-avatar{width:30px;height:30px;border-radius:50%;background:var(--color-primary);color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600}
+.user-dd-menu{position:absolute;top:100%;right:0;margin-top:4px;width:150px;background:var(--color-surface);border:1px solid var(--color-border);border-radius:var(--radius-md);box-shadow:var(--shadow-lg);z-index:400;display:none}
+.user-dd-menu.show{display:block}
+.user-dd-item{padding:8px 14px;font-size:var(--text-sm);cursor:pointer;transition:background .1s;color:var(--color-text-primary)}
+.user-dd-item:hover{background:var(--color-bg)}
+.content-area{flex:1;overflow-y:auto;padding:var(--space-6)}
+.toast-container{position:fixed;top:70px;right:24px;z-index:700;display:flex;flex-direction:column;gap:8px}
+.toast{padding:12px 20px;border-radius:var(--radius-md);font-size:var(--text-sm);font-weight:var(--font-medium);box-shadow:var(--shadow-lg);display:flex;align-items:center;gap:8px;animation:toastIn .3s ease;min-width:240px}
+.toast.success{background:var(--state-success-bg);color:var(--state-success);border:1px solid rgba(22,163,74,.2)}
+.toast.error{background:var(--state-error-bg);color:var(--state-error);border:1px solid rgba(220,38,38,.2)}
+.toast.info{background:var(--state-info-bg);color:var(--state-info);border:1px solid rgba(59,130,246,.2)}
+@keyframes toastIn{from{opacity:0;transform:translateX(40px)}to{opacity:1;transform:translateX(0)}}
+.page-header{margin-bottom:var(--space-6)}
+.page-title{font-size:var(--text-xl);font-weight:var(--font-bold);color:var(--color-text-primary);margin:0 0 4px}
+.page-desc{font-size:var(--text-sm);color:var(--color-text-secondary);margin:0}
+.page-card{background:var(--color-surface);border-radius:var(--radius-lg);padding:var(--space-6);box-shadow:var(--shadow-sm);margin-bottom:var(--space-6)}
+.data-table{width:100%;border-collapse:collapse;font-size:var(--text-sm)}
+.data-table thead{background:var(--color-bg);position:sticky;top:0;z-index:5}
+.data-table th{padding:10px 12px;text-align:left;font-weight:500;color:var(--color-text-secondary);border-bottom:2px solid var(--color-border);white-space:nowrap}
+.data-table td{padding:10px 12px;border-bottom:1px solid var(--color-border-light);vertical-align:middle}
+.data-table tbody tr{transition:background .12s;cursor:pointer}
+.data-table tbody tr:hover{background:var(--color-primary-bg)}
+.status-tag{display:inline-flex;align-items:center;gap:4px;padding:2px 10px;border-radius:99px;font-size:12px;font-weight:500}
+.status-tag.blue{background:var(--state-info-bg);color:var(--state-info)}
+.status-tag.orange{background:var(--state-warning-bg);color:var(--state-warning)}
+.status-tag.green{background:var(--state-success-bg);color:var(--state-success)}
+.btn-sm{height:32px;padding:0 14px;border-radius:var(--radius-md);font-size:var(--text-sm);font-weight:500;cursor:pointer;border:none;transition:all .15s;display:inline-flex;align-items:center;gap:6px}
+.btn-primary{background:var(--color-primary);color:#fff}
+.btn-primary:hover{background:var(--color-primary-light)}
+.dialog-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:600;display:none;align-items:center;justify-content:center}
+.dialog-overlay.show{display:flex}
+.dialog{background:var(--color-surface);border-radius:var(--radius-lg);box-shadow:var(--shadow-lg);width:520px;max-width:90vw;max-height:80vh;overflow-y:auto}
+.dialog-header{padding:16px 20px;border-bottom:1px solid var(--color-border);font-size:var(--text-lg);font-weight:var(--font-semibold);display:flex;align-items:center;justify-content:space-between}
+.dialog-close{width:28px;height:28px;border-radius:var(--radius-sm);border:none;background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--color-text-muted);transition:background .15s}
+.dialog-close:hover{background:var(--color-bg);color:var(--color-text-primary)}
+.dialog-body{padding:20px}
+.dialog-footer{padding:12px 20px;border-top:1px solid var(--color-border);display:flex;justify-content:flex-end;gap:var(--space-3)}
+.dialog-label{font-size:var(--text-sm);font-weight:var(--font-medium);margin-bottom:6px;color:var(--color-text-primary)}
+.dialog-input{width:100%;height:36px;border:1px solid var(--color-border);border-radius:var(--radius-md);padding:0 12px;font-size:var(--text-sm);outline:none;background:var(--color-surface);transition:border-color .2s}
+.dialog-input:focus{border-color:var(--color-primary)}
+.dialog-select{width:100%;height:36px;border:1px solid var(--color-border);border-radius:var(--radius-md);padding:0 10px;font-size:var(--text-sm);outline:none;background:var(--color-surface);cursor:pointer}
+.dialog-select:focus{border-color:var(--color-primary)}
+.btn-cancel{height:34px;padding:0 20px;border:1px solid var(--color-border);border-radius:var(--radius-md);background:var(--color-surface);font-size:var(--text-sm);cursor:pointer;transition:all .15s;color:var(--color-text-primary)}
+.btn-cancel:hover{background:var(--color-bg)}
+.btn-confirm{height:34px;padding:0 20px;border:none;border-radius:var(--radius-md);font-size:var(--text-sm);font-weight:var(--font-semibold);cursor:pointer;transition:all .15s;color:#fff;background:var(--color-primary)}
+.btn-confirm:hover{filter:brightness(1.08)}
+/* Org tree */
+.org-layout{display:flex;gap:var(--space-6);margin-bottom:var(--space-6)}
+.org-tree-panel{width:320px;min-width:320px;background:var(--color-surface);border-radius:var(--radius-lg);box-shadow:var(--shadow-sm);overflow:hidden;display:flex;flex-direction:column}
+.org-tree-header{padding:12px 16px;border-bottom:1px solid var(--color-border);font-size:var(--text-sm);font-weight:var(--font-semibold);color:var(--color-text-primary);display:flex;align-items:center;justify-content:space-between}
+.org-tree-search{margin:8px 12px;position:relative}
+.org-tree-search input{width:100%;height:30px;border:1px solid var(--color-border);border-radius:var(--radius-md);padding:0 10px 0 28px;font-size:var(--text-xs);outline:none;background:var(--color-bg);transition:border-color .2s}
+.org-tree-search input:focus{border-color:var(--color-primary)}
+.org-tree-search svg{position:absolute;left:8px;top:50%;transform:translateY(-50%);color:var(--color-text-muted)}
+.org-tree-body{flex:1;overflow-y:auto;padding:4px 0}
+.tree-node{cursor:pointer;user-select:none}
+.tree-node-row{display:flex;align-items:center;gap:4px;padding:6px 12px;font-size:var(--text-sm);color:var(--color-text-primary);transition:background .12s;border-radius:var(--radius-md);margin:1px 8px}
+.tree-node-row:hover{background:var(--color-bg)}
+.tree-node-row.active{background:var(--color-primary-bg);color:var(--color-primary);font-weight:var(--font-medium)}
+.tree-arrow{width:16px;height:16px;display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--color-text-muted);transition:transform .2s;flex-shrink:0}
+.tree-arrow.open{transform:rotate(90deg)}
+.tree-arrow.leaf{visibility:hidden}
+.tree-icon{width:16px;height:16px;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:var(--color-primary)}
+.tree-label{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tree-badge{font-size:10px;padding:1px 6px;border-radius:99px;background:var(--color-bg);color:var(--color-text-muted);margin-left:4px;flex-shrink:0}
+.tree-children{overflow:hidden;transition:max-height .2s ease}
+.tree-children.closed{max-height:0!important}
+/* Detail panel */
+.org-detail-panel{flex:1;min-width:0}
+.org-info-bar{display:flex;align-items:center;gap:12px;margin-bottom:var(--space-4);flex-wrap:wrap}
+.org-info-name{font-size:var(--text-lg);font-weight:var(--font-bold);color:var(--color-text-primary)}
+.stat-chip{display:inline-flex;align-items:center;gap:4px;padding:4px 12px;border-radius:var(--radius-md);font-size:var(--text-xs);background:var(--color-bg);color:var(--color-text-secondary)}
+.stat-chip strong{color:var(--color-text-primary);font-weight:var(--font-semibold)}
+.factory-switcher{display:flex;align-items:center;gap:6px;padding:4px 10px;border-radius:var(--radius-md);cursor:pointer;transition:background .15s;font-size:var(--text-sm);color:var(--color-text-secondary)}
+.factory-switcher:hover{background:var(--color-bg)}
+.factory-dropdown{position:absolute;top:100%;right:0;margin-top:4px;width:180px;background:var(--color-surface);border:1px solid var(--color-border);border-radius:var(--radius-md);box-shadow:var(--shadow-lg);z-index:400;display:none}
+.factory-dropdown.show{display:block}
+.factory-dd-item{padding:8px 14px;font-size:var(--text-sm);cursor:pointer;transition:background .1s;color:var(--color-text-primary)}
+.factory-dd-item:hover{background:var(--color-bg)}
+.factory-dd-item.active{color:var(--color-primary);font-weight:var(--font-medium)}
+</style>
+</head>
+<body>
+<div style="display:flex;height:100vh;overflow:hidden">
+<aside class="sidebar" id="sidebar">
+<div style="padding:14px 16px;display:flex;align-items:center;gap:10px;border-bottom:1px solid rgba(255,255,255,.08)">
+<div style="width:32px;height:32px;background:var(--color-primary);border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg></div>
+<span style="color:#fff;font-size:var(--text-base);font-weight:var(--font-semibold);white-space:nowrap">消防告警平台</span>
+</div>
+<nav style="flex:1;overflow-y:auto;padding:8px 0">
+<div onclick="toggleMenuGroup(this)" class="group-header"><span class="group-label">概览</span><span class="group-arrow">&#9654;</span></div>
+<div class="group-menu">
+<a href="javascript:void(0)" class="menu-item" onclick="navTo('dashboard.html')"><span class="menu-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></span><span class="sidebar-text">可视化大屏</span></a>
+</div>
+<div onclick="toggleMenuGroup(this)" class="group-header"><span class="group-label">告警管理</span><span class="group-arrow">&#9654;</span></div>
+<div class="group-menu">
+<a href="javascript:void(0)" class="menu-item" onclick="navTo('alarm-management.html')"><span class="menu-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg></span><span class="sidebar-text">告警中心</span></a>
+<a href="javascript:void(0)" class="menu-item" onclick="navTo('alarm-notification.html')"><span class="menu-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg></span><span class="sidebar-text">告警提示配置</span></a>
+</div>
+<div onclick="toggleMenuGroup(this)" class="group-header"><span class="group-label">运营管理</span><span class="group-arrow">&#9654;</span></div>
+<div class="group-menu">
+<a href="javascript:void(0)" class="menu-item" onclick="navTo('ops-review.html')"><span class="menu-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg></span><span class="sidebar-text">运营审核</span></a>
+<a href="javascript:void(0)" class="menu-item" onclick="navTo('audit-mgmt.html')"><span class="menu-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg></span><span class="sidebar-text">审核配置</span></a>
+                            <a href="javascript:void(0)" class="menu-item" onclick="navTo('audit-history.html')"><span class="menu-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg></span><span class="sidebar-text">历史审核</span></a>
+</div>
+<div onclick="toggleMenuGroup(this)" class="group-header"><span class="group-label">视频管理</span><span class="group-arrow">&#9654;</span></div>
+<div class="group-menu">
+<a href="javascript:void(0)" class="menu-item" onclick="navTo('video.html')"><span class="menu-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg></span><span class="sidebar-text">实时视频</span></a>
+<a href="javascript:void(0)" class="menu-item" onclick="navTo('video-rotation.html')"><span class="menu-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg></span><span class="sidebar-text">轮播配置</span></a>
+</div>
+<div onclick="toggleMenuGroup(this)" class="group-header"><span class="group-label">系统管理</span><span class="group-arrow">&#9654;</span></div>
+<div class="group-menu">
+<a href="javascript:void(0)" class="menu-item" onclick="navTo('user-mgmt.html')"><span class="menu-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span><span class="sidebar-text">用户管理</span></a>
+<a href="javascript:void(0)" class="menu-item" onclick="navTo('role-mgmt.html')"><span class="menu-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></span><span class="sidebar-text">角色管理</span></a>
+<a href="javascript:void(0)" class="menu-item active" onclick="navTo('org-mgmt.html')"><span class="menu-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/></svg></span><span class="sidebar-text">组织机构管理</span></a>
+<a href="javascript:void(0)" class="menu-item" onclick="navTo('tenant-mgmt.html')"><span class="menu-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg></span><span class="sidebar-text">客户管理</span></a>
+<a href="javascript:void(0)" class="menu-item" onclick="navTo('device-mgmt.html')"><span class="menu-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg></span><span class="sidebar-text">设备管理</span></a>
+</div>
+</nav>
+<div class="sidebar-user">
+<div class="sidebar-user-avatar" id="userAvatar">管</div>
+<div class="sidebar-user-info">
+<div class="sidebar-user-name" id="userNameDisplay">系统管理员</div>
+<div class="sidebar-user-role" id="userRoleDisplay">系统管理员</div>
+</div>
+</div>
+</aside>
+<div style="flex:1;display:flex;flex-direction:column;overflow:hidden">
+<header class="topbar">
+<button onclick="toggleSidebar()" style="width:34px;height:34px;display:flex;align-items:center;justify-content:center;border-radius:var(--radius-md);border:1px solid var(--color-border);background:var(--color-surface);cursor:pointer"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
+<div class="breadcrumb"><a href="javascript:void(0)" onclick="navTo('dashboard.html')">首页</a> <span>/</span> 系统管理 <span>/</span> 组织机构管理</div>
+<div class="topbar-search"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input placeholder="搜索组织..."></div>
+<div style="flex:1"></div>
+<div class="bell-btn" onclick="toggleBell(event)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg><span class="bell-badge">12</span></div>
+<div class="bell-dropdown" id="bellDropdown"><div class="bell-dd-header">通知中心</div><div class="bell-dd-item"><span class="bell-dd-dot"></span><div><div class="bell-dd-text">杭州萧山消防器材厂 - 烟雾浓度超标告警</div><div class="bell-dd-time">2分钟前</div></div></div><div class="bell-dd-item"><span class="bell-dd-dot"></span><div><div class="bell-dd-text">宁波北仑化工厂 - 温度异常告警</div><div class="bell-dd-time">15分钟前</div></div></div></div>
+<div class="user-dropdown" onclick="toggleUser(event)">
+<div class="user-avatar" id="topbarUserAvatar">管</div>
+<span id="topbarUserName" style="font-size:var(--text-sm);color:var(--color-text-primary)">系统管理员</span>
+<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+</div>
+<div class="user-dd-menu" id="userDropdown">
+<div class="user-dd-item" onclick="RolePermission.logout()" style="color:var(--state-error)">退出登录</div>
+</div>
+</header>
+<main class="content-area">
+<div class="page-header">
+  <h1 class="page-title">组织机构管理</h1>
+  <p class="page-desc">管理消防组织架构，配置上下级单位关系及管辖范围</p>
+</div>
+
+<div class="org-layout">
+  <!-- Left: Tree Panel -->
+  <div class="org-tree-panel">
+    <div class="org-tree-header">
+      <span>组织架构</span>
+      <button class="btn-sm btn-primary" style="height:26px;font-size:12px;padding:0 10px" onclick="openOrgDialog()">新增组织</button>
+    </div>
+    <div class="org-tree-search">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input placeholder="搜索组织..." id="treeSearch" oninput="filterTree()">
+    </div>
+    <div class="org-tree-body" id="orgTreeBody"></div>
+  </div>
+
+  <!-- Right: Detail Panel -->
+  <div class="org-detail-panel" id="orgDetailPanel">
+    <div class="page-card" id="orgDetailContent" style="min-height:300px">
+      <div style="display:flex;align-items:center;justify-content:center;height:250px;color:var(--color-text-muted);font-size:var(--text-sm)">
+        <div style="text-align:center">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" style="margin-bottom:12px;opacity:.4"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          <div>请在左侧选择一个组织节点查看详情</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</main>
+</div>
+</div>
+
+<!-- Add Org Dialog -->
+<div class="dialog-overlay" id="orgDialogOverlay">
+  <div class="dialog" style="width:520px">
+    <div class="dialog-header">
+      <span>新增组织</span>
+      <button class="dialog-close" onclick="closeOrgDialog()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="dialog-body">
+      <div style="margin-bottom:16px">
+        <div class="dialog-label">组织名称</div>
+        <input class="dialog-input" id="orgName" placeholder="请输入组织名称">
+      </div>
+      <div style="margin-bottom:16px">
+        <div class="dialog-label">所属区域</div>
+        <div style="display:flex;gap:8px">
+          <select class="dialog-select" id="dialogProvince" onchange="onProvinceChange()" style="flex:1">
+            <option value="">请选择省份</option>
+            <option value="浙江省">浙江省</option>
+            <option value="江苏省">江苏省</option>
+            <option value="上海市">上海市</option>
+          </select>
+          <select class="dialog-select" id="dialogCity" onchange="onCityChange()" style="flex:1">
+            <option value="">请选择城市</option>
+          </select>
+          <select class="dialog-select" id="dialogDistrict" style="flex:1">
+            <option value="">请选择区县</option>
+          </select>
+        </div>
+      </div>
+      <div style="margin-bottom:16px">
+        <div class="dialog-label">上级组织</div>
+        <select class="dialog-select" id="orgParent">
+          <option value="">无（顶级组织）</option>
+          <option value="浙江省消防总队">浙江省消防总队</option>
+          <option value="杭州市消防支队">杭州市消防支队</option>
+          <option value="宁波市消防支队">宁波市消防支队</option>
+          <option value="温州市消防支队">温州市消防支队</option>
+          <option value="嘉兴市消防支队">嘉兴市消防支队</option>
+          <option value="萧山区消防大队">萧山区消防大队</option>
+          <option value="余杭区消防大队">余杭区消防大队</option>
+          <option value="北仑区消防大队">北仑区消防大队</option>
+          <option value="龙湾区消防大队">龙湾区消防大队</option>
+          <option value="南湖区消防大队">南湖区消防大队</option>
+        </select>
+      </div>
+      <div style="margin-bottom:16px">
+        <div class="dialog-label">组织级别</div>
+        <select class="dialog-select" id="orgLevel">
+          <option value="省级">省级</option>
+          <option value="市级">市级</option>
+          <option value="区级">区级</option>
+          <option value="单位">单位</option>
+        </select>
+      </div>
+      <div style="margin-bottom:16px">
+        <div class="dialog-label">负责人</div>
+        <input class="dialog-input" id="orgLeader" placeholder="请输入负责人姓名">
+      </div>
+      <div>
+        <div class="dialog-label">联系电话</div>
+        <input class="dialog-input" id="orgPhone" placeholder="请输入联系电话">
+      </div>
+    </div>
+    <div class="dialog-footer">
+      <button class="btn-cancel" onclick="closeOrgDialog()">取消</button>
+      <button class="btn-confirm" onclick="saveOrg()">保存</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast-container" id="toastContainer"></div>
+<script>
+function toggleSidebar(){document.getElementById('sidebar').classList.toggle('collapsed')}
+function toggleMenuGroup(h){var a=h.querySelector('.group-arrow'),m=h.nextElementSibling;if(m){m.classList.toggle('closed');a.classList.toggle('open')}}
+function toggleBell(e){e.stopPropagation();document.getElementById('bellDropdown').classList.toggle('show');document.getElementById('userDropdown').classList.remove('show')}
+function toggleUser(e){e.stopPropagation();document.getElementById('userDropdown').classList.toggle('show');document.getElementById('bellDropdown').classList.remove('show')}
+document.addEventListener('click',function(){var bd=document.getElementById('bellDropdown');if(bd)bd.classList.remove('show');var ud=document.getElementById('userDropdown');if(ud)ud.classList.remove('show')});
+
+var orgTree = {
+  name:'浙江省消防总队',level:'省级',leader:'王芳',phone:'136****9012',personnel:1,region:'浙江省',children:[
+    {name:'杭州市消防支队',level:'市级',leader:'赵强',phone:'135****3456',personnel:1,region:'浙江省/杭州市',children:[
+      {name:'萧山区消防大队',level:'区级',leader:'刘洋',phone:'134****7890',personnel:1,region:'浙江省/杭州市/萧山区',children:[
+        {name:'杭州萧山消防器材厂',level:'单位',leader:'陈磊',phone:'133****2345',personnel:15,region:'浙江省/杭州市/萧山区',children:[]},
+        {name:'杭州萧山化工厂',level:'单位',leader:'周伟',phone:'133****5678',personnel:20,region:'浙江省/杭州市/萧山区',children:[]}
+      ]},
+      {name:'余杭区消防大队',level:'区级',leader:'吴刚',phone:'134****1122',personnel:1,region:'浙江省/杭州市/余杭区',children:[]}
+    ]},
+    {name:'宁波市消防支队',level:'市级',leader:'孙浩',phone:'135****9900',personnel:1,region:'浙江省/宁波市',children:[
+      {name:'北仑区消防大队',level:'区级',leader:'郑明',phone:'134****3344',personnel:1,region:'浙江省/宁波市/北仑区',children:[
+        {name:'宁波北仑化工厂',level:'单位',leader:'孙丽',phone:'132****6789',personnel:25,region:'浙江省/宁波市/北仑区',children:[]}
+      ]}
+    ]},
+    {name:'温州市消防支队',level:'市级',leader:'钱峰',phone:'135****5566',personnel:1,region:'浙江省/温州市',children:[
+      {name:'龙湾区消防大队',level:'区级',leader:'韩磊',phone:'134****7788',personnel:1,region:'浙江省/温州市/龙湾区',children:[
+        {name:'温州龙湾电子厂',level:'单位',leader:'冯强',phone:'131****4321',personnel:18,region:'浙江省/温州市/龙湾区',children:[]}
+      ]}
+    ]},
+    {name:'嘉兴市消防支队',level:'市级',leader:'许涛',phone:'135****2233',personnel:1,region:'浙江省/嘉兴市',children:[
+      {name:'南湖区消防大队',level:'区级',leader:'杨帆',phone:'134****6655',personnel:1,region:'浙江省/嘉兴市/南湖区',children:[
+        {name:'嘉兴南湖纺织厂',level:'单位',leader:'徐敏',phone:'131****8765',personnel:12,region:'浙江省/嘉兴市/南湖区',children:[]}
+      ]}
+    ]}
+  ]
+};
+
+var selectedNode = null;
+
+function countChildren(node){
+  if(!node.children || node.children.length===0) return 0;
+  var c = node.children.length;
+  node.children.forEach(function(ch){c += countChildren(ch);});
+  return c;
+}
+
+function renderTreeNode(node, depth, parentEl){
+  var hasChildren = node.children && node.children.length > 0;
+  var div = document.createElement('div');
+  div.className = 'tree-node';
+  var row = document.createElement('div');
+  row.className = 'tree-node-row';
+  row.style.paddingLeft = (12 + depth * 16) + 'px';
+  row.setAttribute('data-name', node.name);
+  var arrowSpan = document.createElement('span');
+  arrowSpan.className = 'tree-arrow' + (hasChildren ? '' : ' leaf');
+  arrowSpan.innerHTML = '&#9654;';
+  row.appendChild(arrowSpan);
+  var iconSvg = node.level === '单位'
+    ? '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>'
+    : '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>';
+  var iconSpan = document.createElement('span');
+  iconSpan.className = 'tree-icon';
+  iconSpan.innerHTML = iconSvg;
+  row.appendChild(iconSpan);
+  var labelSpan = document.createElement('span');
+  labelSpan.className = 'tree-label';
+  labelSpan.textContent = node.name;
+  row.appendChild(labelSpan);
+  var badge = document.createElement('span');
+  badge.className = 'tree-badge';
+  badge.textContent = node.level;
+  row.appendChild(badge);
+  div.appendChild(row);
+  if(hasChildren){
+    var childContainer = document.createElement('div');
+    childContainer.className = 'tree-children';
+    node.children.forEach(function(ch){
+      renderTreeNode(ch, depth+1, childContainer);
+    });
+    div.appendChild(childContainer);
+    row.onclick = function(e){
+      e.stopPropagation();
+      arrowSpan.classList.toggle('open');
+      childContainer.classList.toggle('closed');
+      selectNode(node, row);
+    };
+  } else {
+    row.onclick = function(e){
+      e.stopPropagation();
+      selectNode(node, row);
+    };
+  }
+  parentEl.appendChild(div);
+}
+
+function renderTree(){
+  var body = document.getElementById('orgTreeBody');
+  body.innerHTML = '';
+  renderTreeNode(orgTree, 0, body);
+}
+
+function filterTree(){
+  var keyword = document.getElementById('treeSearch').value.trim().toLowerCase();
+  var rows = document.querySelectorAll('.tree-node-row');
+  rows.forEach(function(r){
+    var name = r.getAttribute('data-name').toLowerCase();
+    r.style.display = (!keyword || name.indexOf(keyword) > -1) ? 'flex' : 'none';
+  });
+}
+
+function selectNode(node, rowEl){
+  document.querySelectorAll('.tree-node-row').forEach(function(r){r.classList.remove('active');});
+  rowEl.classList.add('active');
+  selectedNode = node;
+  renderDetail(node);
+}
+
+function renderDetail(node){
+  var html = '';
+  html += '<div class="org-info-bar">';
+  html += '<span class="org-info-name">'+node.name+'</span>';
+  html += '<button class="btn-sm btn-primary" style="height:28px;font-size:12px;padding:0 12px" onclick="openOrgDialog(selectedNode)">编辑</button>';
+  var levelColors = {省级:'blue',市级:'orange',区级:'green',单位:'gray'};
+  html += '<span class="status-tag '+(levelColors[node.level]||'blue')+'">'+node.level+'</span>';
+  html += '</div>';
+  html += '<div style="display:flex;gap:var(--space-4);margin-bottom:var(--space-6);flex-wrap:wrap">';
+  html += '<div class="stat-chip">下级组织数 <strong>'+node.children.length+'</strong></div>';
+  html += '<div class="stat-chip">管辖总组织数 <strong>'+countChildren(node)+'</strong></div>';
+  html += '<div class="stat-chip">负责人 <strong>'+node.leader+'</strong></div>';
+  html += '<div class="stat-chip">人员 <strong>'+node.personnel+'人</strong></div>';
+  if(node.region){
+    html += '<div class="stat-chip">所属区域 <strong>'+node.region+'</strong></div>';
+  }
+  html += '</div>';
+  if(node.children && node.children.length > 0){
+    html += '<div class="page-card" style="padding:0;overflow:hidden">';
+    html += '<div style="overflow-x:auto"><table class="data-table"><thead><tr><th>名称</th><th>级别</th><th>所属区域</th><th>负责人</th><th>人数</th></tr></thead><tbody>';
+    node.children.forEach(function(ch){
+      html += '<tr onclick="findAndSelect(\''+ch.name+'\')" style="cursor:pointer"><td style="font-weight:500">'+ch.name+'</td><td><span class="status-tag '+(levelColors[ch.level]||'blue')+'">'+ch.level+'</span></td><td>'+(ch.region||'-')+'</td><td>'+ch.leader+'</td><td>'+ch.personnel+'</td></tr>';
+    });
+    html += '</tbody></table></div></div>';
+  } else {
+    html += '<div class="page-card" style="text-align:center;color:var(--color-text-muted);font-size:var(--text-sm);padding:40px">该组织下暂无下级单位</div>';
+  }
+  document.getElementById('orgDetailContent').innerHTML = html;
+}
+
+function findAndSelect(name){
+  var rows = document.querySelectorAll('.tree-node-row');
+  rows.forEach(function(r){
+    if(r.getAttribute('data-name') === name){
+      r.click();
+    }
+  });
+}
+
+function openOrgDialog(editNode){
+  document.getElementById('orgName').value='';
+  document.getElementById('orgLeader').value='';
+  document.getElementById('orgPhone').value='';
+  document.getElementById('dialogProvince').value='';
+  document.getElementById('dialogCity').innerHTML='<option value="">请选择城市</option>';
+  document.getElementById('dialogDistrict').innerHTML='<option value="">请选择区县</option>';
+  document.getElementById('orgDialogOverlay').querySelector('.dialog-header span').textContent = editNode ? '编辑组织' : '新增组织';
+  if(editNode && editNode.region){
+    var parts = editNode.region.split('/');
+    var prov = parts[0] || '';
+    var city = parts[1] || '';
+    var dist = parts[2] || '';
+    document.getElementById('orgName').value = editNode.name || '';
+    document.getElementById('orgLeader').value = editNode.leader || '';
+    document.getElementById('orgPhone').value = editNode.phone || '';
+    if(prov){
+      document.getElementById('dialogProvince').value = prov;
+      onProvinceChange();
+      if(city){
+        document.getElementById('dialogCity').value = city;
+        onCityChange();
+        if(dist){
+          document.getElementById('dialogDistrict').value = dist;
+        }
+      }
+    }
+  }
+  document.getElementById('orgDialogOverlay').classList.add('show');
+}
+function closeOrgDialog(){
+  document.getElementById('orgDialogOverlay').classList.remove('show');
+}
+function saveOrg(){
+  var name = document.getElementById('orgName').value.trim();
+  var leader = document.getElementById('orgLeader').value.trim();
+  if(!name){showToast('请输入组织名称','error');return;}
+  var prov = document.getElementById('dialogProvince').value;
+  var city = document.getElementById('dialogCity').value;
+  var dist = document.getElementById('dialogDistrict').value;
+  var regionParts = [prov,city,dist].filter(function(s){return s;});
+  var regionStr = regionParts.join('/');
+  if(selectedNode){
+    selectedNode.name = name;
+    selectedNode.leader = leader;
+    selectedNode.phone = document.getElementById('orgPhone').value.trim();
+    selectedNode.region = regionStr || selectedNode.region;
+    renderTree();
+    renderDetail(selectedNode);
+    showToast('组织已更新: '+name,'success');
+  } else {
+    showToast('组织已添加: '+name + (regionStr ? ' ('+regionStr+')' : ''),'success');
+  }
+  closeOrgDialog();
+}
+
+function showToast(msg,type){
+  var container=document.getElementById('toastContainer');
+  var t=document.createElement('div');
+  t.className='toast '+(type||'info');
+  t.innerHTML='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg><span>'+msg+'</span>';
+  container.appendChild(t);
+  setTimeout(function(){t.remove();},2500);
+}
+
+renderTree();
+
+var regionData = {
+  '浙江省': {
+    '杭州市': ['萧山区','滨江区','余杭区','西湖区','上城区'],
+    '宁波市': ['北仑区','海曙区','鄞州区','镇海区'],
+    '温州市': ['龙湾区','鹿城区','瓯海区','乐清市'],
+    '嘉兴市': ['南湖区','秀洲区','海宁市','桐乡市'],
+    '绍兴市': ['越城区','柯桥区','上虞区']
+  },
+  '江苏省': {
+    '南京市': ['玄武区','秦淮区','建邺区','鼓楼区'],
+    '苏州市': ['姑苏区','吴中区','相城区','工业园区'],
+    '无锡市': ['梁溪区','锡山区','惠山区','滨湖区']
+  },
+  '上海市': {
+    '上海市': ['浦东新区','黄浦区','徐汇区','长宁区','静安区']
+  }
+};
+
+function onProvinceChange(){
+  var prov = document.getElementById('dialogProvince').value;
+  var citySelect = document.getElementById('dialogCity');
+  var distSelect = document.getElementById('dialogDistrict');
+  citySelect.innerHTML = '<option value="">请选择城市</option>';
+  distSelect.innerHTML = '<option value="">请选择区县</option>';
+  if(prov && regionData[prov]){
+    Object.keys(regionData[prov]).forEach(function(city){
+      citySelect.innerHTML += '<option value="'+city+'">'+city+'</option>';
+    });
+  }
+}
+function onCityChange(){
+  var prov = document.getElementById('dialogProvince').value;
+  var city = document.getElementById('dialogCity').value;
+  var distSelect = document.getElementById('dialogDistrict');
+  distSelect.innerHTML = '<option value="">请选择区县</option>';
+  if(prov && city && regionData[prov] && regionData[prov][city]){
+    regionData[prov][city].forEach(function(dist){
+      distSelect.innerHTML += '<option value="'+dist+'">'+dist+'</option>';
+    });
+  }
+}
+
+var curUser=localStorage.getItem('fp_user')||'系统管理员';
+var el1=document.getElementById('topbarUserName');if(el1)el1.textContent=curUser;
+var el2=document.getElementById('userAvatar');if(el2)el2.textContent=curUser.charAt(0);
+var el3=document.getElementById('userNameDisplay');if(el3)el3.textContent=curUser;
+var el4=document.getElementById('topbarUserAvatar');if(el4)el4.textContent=curUser.charAt(0);
+function navTo(url){window.location.href=url}
+</script>
+</body>
+</html>

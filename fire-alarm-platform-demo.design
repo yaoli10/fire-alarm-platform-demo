@@ -1,0 +1,265 @@
+{
+  "data": [
+    {
+      "id": "page-login",
+      "title": "系统登录",
+      "type": "page",
+      "version": 1,
+      "createdAt": 1752261600000,
+      "canvasData": {
+        "x": 0,
+        "y": 0,
+        "group": 0
+      },
+      "devMetadata": {
+        "htmlSrc": "pages/login.html",
+        "interactions": [
+          {
+            "domId": "btn-login",
+            "targetPageId": "page-dashboard",
+            "transitionLabel": "登录成功"
+          }
+        ]
+      }
+    },
+    {
+      "id": "page-dashboard",
+      "title": "可视化大屏",
+      "type": "page",
+      "version": 1,
+      "createdAt": 1752261600000,
+      "canvasData": {
+        "x": 620,
+        "y": 0,
+        "group": 0
+      },
+      "devMetadata": {
+        "htmlSrc": "pages/dashboard.html",
+        "interactions": [
+          {
+            "domId": "btn-back-login",
+            "targetPageId": "page-login",
+            "hideEdge": true,
+            "transitionLabel": "返回登录"
+          }
+        ]
+      }
+    },
+    {
+      "id": "page-alarm-management",
+      "title": "告警中心",
+      "type": "page",
+      "version": 1,
+      "createdAt": 1752261600000,
+      "canvasData": {
+        "x": 0,
+        "y": 377,
+        "group": 0
+      },
+      "devMetadata": {
+        "htmlSrc": "pages/alarm-management.html"
+      }
+    },
+    {
+      "id": "page-alarm-notification",
+      "title": "告警提示配置",
+      "type": "page",
+      "version": 1,
+      "createdAt": 1752261600000,
+      "canvasData": {
+        "x": 620,
+        "y": 377,
+        "group": 0
+      },
+      "devMetadata": {
+        "htmlSrc": "pages/alarm-notification.html"
+      }
+    },
+    {
+      "id": "page-ops-review",
+      "title": "运营审核",
+      "type": "page",
+      "version": 1,
+      "createdAt": 1752261600000,
+      "canvasData": {
+        "x": 1240,
+        "y": 377,
+        "group": 0
+      },
+      "devMetadata": {
+        "htmlSrc": "pages/ops-review.html"
+      }
+    },
+    {
+      "id": "page-audit-mgmt",
+      "title": "审核配置",
+      "type": "page",
+      "version": 1,
+      "createdAt": 1752261600000,
+      "canvasData": {
+        "x": 1860,
+        "y": 377,
+        "group": 0
+      },
+      "devMetadata": {
+        "htmlSrc": "pages/audit-mgmt.html"
+      }
+    },
+    {
+      "id": "page-video",
+      "title": "实时视频",
+      "type": "page",
+      "version": 1,
+      "createdAt": 1752261600000,
+      "canvasData": {
+        "x": 2480,
+        "y": 377,
+        "group": 0
+      },
+      "devMetadata": {
+        "htmlSrc": "pages/video.html"
+      }
+    },
+    {
+      "id": "page-video-rotation",
+      "title": "轮播配置",
+      "type": "page",
+      "version": 1,
+      "createdAt": 1752261600000,
+      "canvasData": {
+        "x": 3100,
+        "y": 377,
+        "group": 0
+      },
+      "devMetadata": {
+        "htmlSrc": "pages/video-rotation.html"
+      }
+    },
+    {
+      "id": "page-user-mgmt",
+      "title": "用户管理",
+      "type": "page",
+      "version": 1,
+      "createdAt": 1752261600000,
+      "canvasData": {
+        "x": 3720,
+        "y": 377,
+        "group": 0
+      },
+      "devMetadata": {
+        "htmlSrc": "pages/user-mgmt.html"
+      }
+    },
+    {
+      "id": "page-role-mgmt",
+      "title": "角色管理",
+      "type": "page",
+      "version": 1,
+      "createdAt": 1752261600000,
+      "canvasData": {
+        "x": 4340,
+        "y": 377,
+        "group": 0
+      },
+      "devMetadata": {
+        "htmlSrc": "pages/role-mgmt.html"
+      }
+    },
+    {
+      "id": "page-org-mgmt",
+      "title": "组织机构管理",
+      "type": "page",
+      "version": 1,
+      "createdAt": 1752261600000,
+      "canvasData": {
+        "x": 4960,
+        "y": 377,
+        "group": 0
+      },
+      "devMetadata": {
+        "htmlSrc": "pages/org-mgmt.html"
+      }
+    },
+    {
+      "id": "page-tenant-mgmt",
+      "title": "客户管理",
+      "type": "page",
+      "version": 1,
+      "createdAt": 1752261600000,
+      "canvasData": {
+        "x": 5580,
+        "y": 377,
+        "group": 0
+      },
+      "devMetadata": {
+        "htmlSrc": "pages/tenant-mgmt.html"
+      }
+    },
+    {
+      "id": "page-device-mgmt",
+      "title": "设备管理",
+      "type": "page",
+      "version": 1,
+      "createdAt": 1752261600000,
+      "canvasData": {
+        "x": 6200,
+        "y": 377,
+        "group": 0
+      },
+      "devMetadata": {
+        "htmlSrc": "pages/device-mgmt.html"
+      }
+    },
+    {
+      "id": "page-audit-history",
+      "title": "历史审核",
+      "type": "page",
+      "version": 1,
+      "createdAt": 1752261600000,
+      "canvasData": {
+        "x": 7400,
+        "y": 377,
+        "width": 1280,
+        "height": 800
+      },
+      "htmlSrc": "pages/audit-history.html"
+    },
+    {
+      "id": "image-fire-detection-camera",
+      "title": "AI火情检测画面",
+      "type": "image",
+      "version": 1,
+      "createdAt": 1752261600000,
+      "canvasData": {
+        "x": 0,
+        "y": 754
+      },
+      "devMetadata": {
+        "imageSrc": "assets/fire-detection-camera.jpg"
+      }
+    },
+    {
+      "id": "image-heatmap-map",
+      "title": "区域告警热力图",
+      "type": "image",
+      "version": 1,
+      "createdAt": 1752261600000,
+      "canvasData": {
+        "x": 620,
+        "y": 754
+      },
+      "devMetadata": {
+        "imageSrc": "assets/heatmap-map.jpg"
+      }
+    }
+  ],
+  "config": {
+    "autoLayout": true,
+    "deviceType": "desktop",
+    "projectName": "视联网消防告警运营平台Demo",
+    "windowSize": {
+      "width": 800,
+      "height": 600
+    }
+  }
+}

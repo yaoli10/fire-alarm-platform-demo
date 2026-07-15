@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>视联网消防告警运营平台</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<link rel="stylesheet" href="../colors_and_type.css">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 100%; height: 100%; overflow: hidden; font-family: var(--font-sans); background: var(--dashboard-bg); color: var(--dashboard-text); }
+
+  /* Dashboard overrides for dark theme */
+  .factory-switcher { background: var(--dashboard-card); border-color: var(--dashboard-border); color: var(--dashboard-text); }
+  .factory-switcher:hover { border-color: var(--color-primary-light); background: rgba(30,90,168,.15); }
+  .factory-dropdown { background: var(--dashboard-card); border-color: var(--dashboard-border); box-shadow: var(--shadow-lg); }
+  .factory-option { color: var(--dashboard-text); border-bottom-color: var(--dashboard-border); }
+  .factory-option:hover { background: rgba(30,90,168,.15); }
+  .factory-option.active { background: rgba(30,90,168,.25); color: var(--color-primary-light); }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--dashboard-border); border-radius: 4px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--dashboard-muted); }
+
+  /* Top bar */
+  .top-bar { height: 56px; background: var(--dashboard-card); border-bottom: 1px solid var(--dashboard-border); display: flex; align-items: center; justify-content: space-between; padding: 0 var(--space-6); position: relative; z-index: 100; flex-shrink: 0; }
+  .top-bar .logo-section { display: flex; align-items: center; gap: var(--space-3); }
+  .top-bar .logo-icon { width: 32px; height: 32px; background: linear-gradient(135deg, var(--color-primary), var(--color-primary-light)); border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center; font-size: 16px; color: #fff; }
+  .top-bar .logo-name { font-size: var(--text-lg); font-weight: var(--font-semibold); color: var(--dashboard-text); white-space: nowrap; }
+  .top-bar .center-section { display: flex; align-items: center; gap: var(--space-4); }
+  .top-bar .right-section { display: flex; align-items: center; gap: var(--space-4); }
+
+  /* Area selector */
+  .area-selector { display: flex; gap: 2px; background: var(--dashboard-bg); border-radius: var(--radius-md); padding: 2px; }
+  .area-btn { padding: 4px 14px; border: none; background: transparent; color: var(--dashboard-muted); font-size: var(--text-sm); border-radius: 6px; cursor: pointer; transition: all .2s; font-family: var(--font-sans); }
+  .area-btn.active { background: var(--color-primary); color: #fff; }
+  .area-btn:hover:not(.active) { color: var(--dashboard-text); }
+
+  /* Main layout */
+  .main-content { display: flex; height: calc(100vh - 56px); overflow: hidden; }
+  .panel-left, .panel-right { width: 280px; flex-shrink: 0; overflow-y: auto; padding: var(--space-4); display: flex; flex-direction: column; gap: var(--space-4); }
+  .panel-center { flex: 1; position: relative; overflow: hidden; background: var(--dashboard-bg); }
+
+  /* Card */
+  .dash-card { background: var(--dashboard-card); border: 1px solid var(--dashboard-border); border-radius: var(--radius-lg); padding: var(--space-4); }
+  .dash-card-title { font-size: var(--text-sm); font-weight: var(--font-semibold); color: var(--dashboard-muted); margin-bottom: var(--space-3); display: flex; align-items: center; gap: var(--space-2); }
+  .dash-card-title::before { content: ''; width: 3px; height: 14px; background: var(--color-primary-light); border-radius: 2px; }
+
+  /* KPI grid */
+  .kpi-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-3); }
+  .kpi-item { background: var(--dashboard-bg); border: 1px solid var(--dashboard-border); border-radius: var(--radius-md); padding: var(--space-3); text-align: center; cursor: pointer; transition: all .2s; }
+  .kpi-item:hover { border-color: var(--color-primary-light); transform: translateY(-1px); }
+  .kpi-value { font-size: var(--text-3xl); font-weight: var(--font-bold); line-height: 1.2; }
+  .kpi-label { font-size: var(--text-xs); color: var(--dashboard-muted); margin-top: 2px; }
+
+  /* Circular progress */
+  .circle-progress { position: relative; width: 120px; height: 120px; margin: 0 auto; }
+  .circle-progress svg { transform: rotate(-90deg); }
+  .circle-progress .track { fill: none; stroke: var(--dashboard-border); stroke-width: 8; }
+  .circle-progress .fill { fill: none; stroke-width: 8; stroke-linecap: round; transition: stroke-dashoffset 1s ease; }
+  .circle-progress .center-text { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); text-align: center; }
+  .circle-progress .center-text .pct { font-size: var(--text-2xl); font-weight: var(--font-bold); color: var(--color-primary-light); }
+  .circle-progress .center-text .sub { font-size: var(--text-xs); color: var(--dashboard-muted); }
+
+  /* Device stats */
+  .device-stats { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-2); margin-top: var(--space-3); }
+  .device-stat { display: flex; flex-direction: column; align-items: center; padding: var(--space-2); background: var(--dashboard-bg); border-radius: var(--radius-sm); }
+  .device-stat .val { font-size: var(--text-lg); font-weight: var(--font-semibold); }
+  .device-stat .lbl { font-size: var(--text-xs); color: var(--dashboard-muted); }
+
+  /* Map markers */
+  .map-container { width: 100%; height: 100%; position: relative; }
+  .map-container img { width: 100%; height: 100%; object-fit: cover; }
+  .alarm-marker { position: absolute; width: 14px; height: 14px; border-radius: 50%; cursor: pointer; z-index: 10; transition: transform .2s; }
+  .alarm-marker:hover { transform: scale(1.4); z-index: 20; }
+  .alarm-marker.fire { background: #ef4444; box-shadow: 0 0 8px rgba(239,68,68,.6); }
+  .alarm-marker.smoke { background: #f59e0b; box-shadow: 0 0 8px rgba(245,158,11,.6); }
+  .alarm-marker.other { background: #3b82f6; box-shadow: 0 0 8px rgba(59,130,246,.6); }
+  .alarm-marker::after { content: ''; position: absolute; inset: -4px; border-radius: 50%; border: 2px solid currentColor; opacity: 0; animation: pulse-ring 2s ease-out infinite; }
+  .alarm-marker.fire::after { color: #ef4444; }
+  .alarm-marker.smoke::after { color: #f59e0b; }
+  .alarm-marker.other::after { color: #3b82f6; }
+  @keyframes pulse-ring { 0% { transform: scale(.8); opacity: .8; } 100% { transform: scale(2.2); opacity: 0; } }
+
+  /* Marker popup */
+  .marker-popup { position: absolute; width: 260px; background: var(--dashboard-card); border: 1px solid var(--dashboard-border); border-radius: var(--radius-lg); padding: var(--space-4); z-index: 50; box-shadow: var(--shadow-lg); display: none; }
+  .marker-popup.show { display: block; animation: fadeInUp .25s ease; }
+  @keyframes fadeInUp { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+  .marker-popup .popup-close { position: absolute; top: 8px; right: 8px; background: none; border: none; color: var(--dashboard-muted); cursor: pointer; font-size: 16px; line-height: 1; }
+  .marker-popup .popup-close:hover { color: var(--dashboard-text); }
+  .popup-device-name { font-size: var(--text-base); font-weight: var(--font-semibold); margin-bottom: var(--space-2); }
+  .popup-alarm-tag { display: inline-block; padding: 2px 8px; border-radius: var(--radius-sm); font-size: var(--text-xs); font-weight: var(--font-medium); }
+  .popup-info-row { display: flex; justify-content: space-between; font-size: var(--text-xs); color: var(--dashboard-muted); margin-top: var(--space-2); }
+  .popup-actions { display: flex; gap: var(--space-2); margin-top: var(--space-3); }
+  .popup-btn { flex: 1; padding: 6px 0; border: none; border-radius: var(--radius-sm); font-size: var(--text-xs); font-weight: var(--font-medium); cursor: pointer; transition: all .2s; font-family: var(--font-sans); }
+  .popup-btn-primary { background: var(--color-primary); color: #fff; }
+  .popup-btn-primary:hover { background: var(--color-primary-light); }
+  .popup-btn-secondary { background: var(--dashboard-bg); color: var(--dashboard-text); border: 1px solid var(--dashboard-border); }
+  .popup-btn-secondary:hover { border-color: var(--color-primary-light); }
+
+  /* Alarm ticker */
+  .alarm-ticker { position: absolute; bottom: 0; left: 0; right: 0; height: 36px; background: rgba(17,29,51,.92); border-top: 1px solid var(--dashboard-border); display: flex; align-items: center; overflow: hidden; cursor: pointer; z-index: 30; }
+  .ticker-label { padding: 0 var(--space-3); font-size: var(--text-xs); color: #ef4444; font-weight: var(--font-semibold); white-space: nowrap; border-right: 1px solid var(--dashboard-border); height: 100%; display: flex; align-items: center; gap: 4px; flex-shrink: 0; }
+  .ticker-content { flex: 1; overflow: hidden; position: relative; height: 100%; display: flex; align-items: center; }
+  .ticker-track { display: flex; white-space: nowrap; animation: ticker-scroll 40s linear infinite; }
+  .ticker-track.paused { animation-play-state: paused; }
+  .ticker-item { padding: 0 var(--space-6); font-size: var(--text-xs); color: var(--dashboard-text); display: flex; align-items: center; gap: var(--space-2); }
+  .ticker-dot { width: 6px; height: 6px; border-radius: 50; flex-shrink: 0; }
+  @keyframes ticker-scroll { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+
+  /* Toggle buttons */
+  .toggle-group { display: flex; gap: 2px; background: var(--dashboard-bg); border-radius: var(--radius-sm); padding: 2px; }
+  .toggle-btn { padding: 3px 10px; border: none; background: transparent; color: var(--dashboard-muted); font-size: var(--text-xs); border-radius: 4px; cursor: pointer; transition: all .2s; font-family: var(--font-sans); }
+  .toggle-btn.active { background: var(--color-primary); color: #fff; }
+
+  /* Horizontal bar */
+  .h-bar-item { display: flex; align-items: center; gap: var(--space-3); margin-bottom: var(--space-2); }
+  .h-bar-label { width: 70px; font-size: var(--text-xs); color: var(--dashboard-muted); text-align: right; flex-shrink: 0; }
+  .h-bar-track { flex: 1; height: 18px; background: var(--dashboard-bg); border-radius: var(--radius-sm); overflow: hidden; position: relative; }
+  .h-bar-fill { height: 100%; border-radius: var(--radius-sm); transition: width 1s ease; display: flex; align-items: center; padding-left: 6px; font-size: 10px; color: #fff; font-weight: var(--font-medium); }
+
+
+  /* Funnel */
+  .funnel { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+  .funnel-step { display: flex; align-items: center; width: 100%; position: relative; }
+  .funnel-step .funnel-label { font-size: var(--text-xs); color: var(--dashboard-muted); width: 50px; text-align: right; flex-shrink: 0; padding-right: var(--space-2); }
+  .funnel-step .funnel-bar { height: 28px; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: var(--text-xs); font-weight: var(--font-semibold); color: #fff; transition: all .3s; cursor: pointer; }
+  .funnel-step .funnel-bar:hover { filter: brightness(1.2); }
+  .funnel-arrow { text-align: center; color: var(--dashboard-muted); font-size: 10px; line-height: 1; }
+
+  /* Alarm list rows */
+  .alarm-row { padding: 10px 12px; background: var(--dashboard-bg); border: 1px solid var(--dashboard-border); border-radius: var(--radius-md); cursor: pointer; transition: all .15s; flex-shrink: 0; }
+  .alarm-row:hover { border-color: var(--color-primary-light); background: rgba(30,90,168,.1); }
+
+
+  /* Right section buttons */
+  .top-btn { background: none; border: 1px solid var(--dashboard-border); color: var(--dashboard-muted); width: 32px; height: 32px; border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all .2s; font-size: 14px; }
+  .top-btn:hover { border-color: var(--color-primary-light); color: var(--dashboard-text); }
+  .live-clock { font-size: var(--text-sm); color: var(--dashboard-muted); font-variant-numeric: tabular-nums; }
+
+  /* Toast */
+  .toast-container { position: fixed; top: 70px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 8px; }
+  .toast { padding: 10px 20px; background: var(--dashboard-card); border: 1px solid var(--dashboard-border); border-radius: var(--radius-md); font-size: var(--text-sm); color: var(--dashboard-text); box-shadow: var(--shadow-lg); animation: toastIn .3s ease; min-width: 200px; }
+  .toast.out { animation: toastOut .3s ease forwards; }
+  @keyframes toastIn { from { opacity:0; transform:translateX(40px); } to { opacity:1; transform:translateX(0); } }
+  @keyframes toastOut { from { opacity:1; transform:translateX(0); } to { opacity:0; transform:translateX(40px); } }
+</style>
+
+</head>
+<body>
+
+<!-- Toast container -->
+<div class="toast-container" id="toastContainer"></div>
+
+<!-- Top bar -->
+<div class="top-bar">
+  <div class="logo-section">
+    <div class="logo-icon">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"/><path d="M12 6v6l4 2"/></svg>
+    </div>
+    <span class="logo-name">视联网消防告警运营平台</span>
+  </div>
+  <div class="center-section">
+    <div class="area-selector">
+      <button class="area-btn active" onclick="switchArea(this,'省')">省</button>
+      <button class="area-btn" onclick="switchArea(this,'市')">市</button>
+      <button class="area-btn" onclick="switchArea(this,'区')">区</button>
+    </div>
+    <div class="factory-switcher" id="factorySwitcher" onclick="RolePermission.toggleFactoryDD()">
+      <span id="factoryNameDisplay"></span>
+      <svg width="10" height="10" viewBox="0 0 10 10" fill="currentColor"><path d="M2 3.5L5 7l3-3.5H2z"/></svg>
+      <div class="factory-dropdown" id="factoryDropdown"></div>
+    </div>
+  </div>
+  <div class="right-section">
+    <span class="live-clock" id="liveClock"></span>
+    <button class="top-btn" onclick="toggleFullscreen()" title="全屏">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 00-2 2v3m18 0V5a2 2 0 00-2-2h-3m0 18h3a2 2 0 002-2v-3M3 16v3a2 2 0 002 2h3"/></svg>
+    </button>
+    <button class="top-btn" onclick="RolePermission.logout()" title="退出登录">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+    </button>
+  </div>
+</div>
+
+<!-- Main content -->
+<div class="main-content">
+
+  <!-- LEFT PANEL -->
+  <div class="panel-left">
+
+    <!-- 设备状态 -->
+    <div class="dash-card">
+      <div class="dash-card-title">设备状态</div>
+      <div class="circle-progress">
+        <svg width="120" height="120" viewBox="0 0 120 120">
+          <circle class="track" cx="60" cy="60" r="50"/>
+          <circle class="fill" cx="60" cy="60" r="50" stroke="url(#progressGrad)" stroke-dasharray="314.16" stroke-dashoffset="16.65" id="progressCircle"/>
+          <defs>
+            <linearGradient id="progressGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" style="stop-color:#3a7bd5"/>
+              <stop offset="100%" style="stop-color:#16a34a"/>
+            </linearGradient>
+          </defs>
+        </svg>
+        <div class="center-text">
+          <div class="pct">94.7%</div>
+          <div class="sub">在线率</div>
+        </div>
+      </div>
+      <div class="device-stats">
+        <div class="device-stat"><span class="val" style="color:#fff">1286</span><span class="lbl">总设备</span></div>
+        <div class="device-stat"><span class="val" style="color:#16a34a">1218</span><span class="lbl">在线</span></div>
+        <div class="device-stat"><span class="val" style="color:#6b7280">48</span><span class="lbl">离线</span></div>
+        <div class="device-stat"><span class="val" style="color:#ef4444">20</span><span class="lbl">故障</span></div>
+      </div>
+    </div>
+
+    <!-- 今日告警概览 -->
+    <div class="dash-card">
+      <div class="dash-card-title">今日告警概览</div>
+      <div class="kpi-grid">
+        <div class="kpi-item" onclick="showToast('今日告警总数：156条，请及时处理')">
+          <div class="kpi-value" style="color:#fff">156</div>
+          <div class="kpi-label">今日告警</div>
+        </div>
+        <div class="kpi-item" onclick="showToast('已确认告警：89条')">
+          <div class="kpi-value" style="color:#16a34a">89</div>
+          <div class="kpi-label">已确认</div>
+        </div>
+        <div class="kpi-item" onclick="showToast('处置中告警：34条，请加快处理')">
+          <div class="kpi-value" style="color:#3b82f6">34</div>
+          <div class="kpi-label">处置中</div>
+        </div>
+        <div class="kpi-item" onclick="showToast('已完成处置：67条')">
+          <div class="kpi-value" style="color:#16a34a">67</div>
+          <div class="kpi-label">已完成</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 告警类型分布 -->
+    <div class="dash-card">
+      <div class="dash-card-title">告警类型分布</div>
+      <div style="position:relative;height:200px;">
+        <canvas id="alarmTypeChart"></canvas>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- CENTER PANEL (MAP) -->
+  <div class="panel-center">
+    <div class="map-container" id="mapContainer">
+      <img src="../assets/heatmap-map.jpg" alt="热力地图" draggable="false">
+
+      <!-- Alarm markers -->
+      <div class="alarm-marker fire" style="left:15%;top:25%" data-id="1" data-name="1号仓库温感探测器A" data-type="火情" data-time="14:32:18" data-status="处置中"></div>
+      <div class="alarm-marker fire" style="left:22%;top:45%" data-id="2" data-name="2号车间烟雾探测器B" data-type="火情" data-time="14:28:05" data-status="已确认"></div>
+      <div class="alarm-marker smoke" style="left:35%;top:18%" data-id="3" data-name="3号厂房感烟探测器C" data-type="烟雾" data-time="14:25:42" data-status="处置中"></div>
+      <div class="alarm-marker fire" style="left:42%;top:60%" data-id="4" data-name="办公楼消防栓D" data-type="火情" data-time="14:20:33" data-status="已完成"></div>
+      <div class="alarm-marker fire" style="left:55%;top:35%" data-id="5" data-name="食堂厨房温感E" data-type="火情" data-time="14:18:11" data-status="处置中"></div>
+      <div class="alarm-marker smoke" style="left:48%;top:72%" data-id="6" data-name="地下车库烟感F" data-type="烟雾" data-time="14:15:27" data-status="待处理"></div>
+      <div class="alarm-marker fire" style="left:62%;top:20%" data-id="7" data-name="配电房温感G" data-type="火情" data-time="14:10:59" data-status="已确认"></div>
+      <div class="alarm-marker other" style="left:70%;top:50%" data-id="8" data-name="锅炉房压力传感器H" data-type="其他" data-time="14:08:14" data-status="处置中"></div>
+      <div class="alarm-marker fire" style="left:78%;top:30%" data-id="9" data-name="化学品仓库感温I" data-type="火情" data-time="14:05:42" data-status="已确认"></div>
+      <div class="alarm-marker smoke" style="left:85%;top:55%" data-id="10" data-name="成品仓库烟感J" data-type="烟雾" data-time="14:02:36" data-status="已完成"></div>
+      <div class="alarm-marker fire" style="left:30%;top:80%" data-id="11" data-name="原料仓库温感K" data-type="火情" data-time="13:58:23" data-status="处置中"></div>
+      <div class="alarm-marker fire" style="left:65%;top:75%" data-id="12" data-name="5号车间消防喷淋L" data-type="火情" data-time="13:55:07" data-status="待处理"></div>
+
+      <!-- Marker popup -->
+      <div class="marker-popup" id="markerPopup">
+        <button class="popup-close" onclick="closePopup()">&times;</button>
+        <div class="popup-device-name" id="popupDeviceName"></div>
+        <span class="popup-alarm-tag" id="popupAlarmTag"></span>
+        <div class="popup-info-row"><span>告警时间</span><span id="popupTime"></span></div>
+        <div class="popup-info-row"><span>当前状态</span><span id="popupStatus"></span></div>
+        <div class="popup-actions">
+          <button class="popup-btn popup-btn-primary" onclick="showToast('正在加载告警详情...');closePopup()">查看详情</button>
+          <button class="popup-btn popup-btn-secondary" onclick="showToast('正在连接视频流...');closePopup()">查看视频</button>
+        </div>
+      </div>
+
+      <!-- Alarm ticker -->
+      <div class="alarm-ticker" id="alarmTicker" onclick="toggleTicker()">
+        <div class="ticker-label">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="8"/></svg>
+          实时告警
+        </div>
+        <div class="ticker-content">
+          <div class="ticker-track" id="tickerTrack">
+            <div class="ticker-item"><span class="ticker-dot" style="width:6px;height:6px;border-radius:50%;background:#ef4444;flex-shrink:0"></span>14:32 1号仓库温感探测器A - 火情告警 - 处置中</div>
+            <div class="ticker-item"><span class="ticker-dot" style="width:6px;height:6px;border-radius:50%;background:#ef4444;flex-shrink:0"></span>14:28 2号车间烟雾探测器B - 火情告警 - 已确认</div>
+            <div class="ticker-item"><span class="ticker-dot" style="width:6px;height:6px;border-radius:50%;background:#f59e0b;flex-shrink:0"></span>14:25 3号厂房感烟探测器C - 烟雾告警 - 处置中</div>
+            <div class="ticker-item"><span class="ticker-dot" style="width:6px;height:6px;border-radius:50%;background:#ef4444;flex-shrink:0"></span>14:20 办公楼消防栓D - 火情告警 - 已完成</div>
+            <div class="ticker-item"><span class="ticker-dot" style="width:6px;height:6px;border-radius:50%;background:#ef4444;flex-shrink:0"></span>14:18 食堂厨房温感E - 火情告警 - 处置中</div>
+            <div class="ticker-item"><span class="ticker-dot" style="width:6px;height:6px;border-radius:50%;background:#f59e0b;flex-shrink:0"></span>14:15 地下车库烟感F - 烟雾告警 - 待处理</div>
+            <div class="ticker-item"><span class="ticker-dot" style="width:6px;height:6px;border-radius:50%;background:#ef4444;flex-shrink:0"></span>14:10 配电房温感G - 火情告警 - 已确认</div>
+            <div class="ticker-item"><span class="ticker-dot" style="width:6px;height:6px;border-radius:50%;background:#3b82f6;flex-shrink:0"></span>14:08 锅炉房压力传感器H - 其他告警 - 处置中</div>
+            <!-- duplicated for seamless loop -->
+            <div class="ticker-item"><span class="ticker-dot" style="width:6px;height:6px;border-radius:50%;background:#ef4444;flex-shrink:0"></span>14:32 1号仓库温感探测器A - 火情告警 - 处置中</div>
+            <div class="ticker-item"><span class="ticker-dot" style="width:6px;height:6px;border-radius:50%;background:#ef4444;flex-shrink:0"></span>14:28 2号车间烟雾探测器B - 火情告警 - 已确认</div>
+            <div class="ticker-item"><span class="ticker-dot" style="width:6px;height:6px;border-radius:50%;background:#f59e0b;flex-shrink:0"></span>14:25 3号厂房感烟探测器C - 烟雾告警 - 处置中</div>
+            <div class="ticker-item"><span class="ticker-dot" style="width:6px;height:6px;border-radius:50%;background:#ef4444;flex-shrink:0"></span>14:20 办公楼消防栓D - 火情告警 - 已完成</div>
+            <div class="ticker-item"><span class="ticker-dot" style="width:6px;height:6px;border-radius:50%;background:#ef4444;flex-shrink:0"></span>14:18 食堂厨房温感E - 火情告警 - 处置中</div>
+            <div class="ticker-item"><span class="ticker-dot" style="width:6px;height:6px;border-radius:50%;background:#f59e0b;flex-shrink:0"></span>14:15 地下车库烟感F - 烟雾告警 - 待处理</div>
+            <div class="ticker-item"><span class="ticker-dot" style="width:6px;height:6px;border-radius:50%;background:#ef4444;flex-shrink:0"></span>14:10 配电房温感G - 火情告警 - 已确认</div>
+            <div class="ticker-item"><span class="ticker-dot" style="width:6px;height:6px;border-radius:50%;background:#3b82f6;flex-shrink:0"></span>14:08 锅炉房压力传感器H - 其他告警 - 处置中</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT PANEL -->
+  <div class="panel-right">
+
+    <!-- 告警趋势 -->
+    <div class="dash-card">
+      <div class="dash-card-title" style="justify-content:space-between;">
+        <span style="display:flex;align-items:center;gap:var(--space-2)"><span style="display:inline">告警趋势</span></span>
+        <div class="toggle-group">
+          <button class="toggle-btn active" onclick="switchTrend(this,'hour')">时</button>
+          <button class="toggle-btn" onclick="switchTrend(this,'day')">日</button>
+          <button class="toggle-btn" onclick="switchTrend(this,'week')">周</button>
+        </div>
+      </div>
+      <div style="position:relative;height:200px;">
+        <canvas id="alarmTrendChart"></canvas>
+      </div>
+    </div>
+
+    <!-- 实时告警清单 -->
+    <div class="dash-card" style="flex:1;overflow:hidden;display:flex;flex-direction:column">
+      <div class="dash-card-title" style="justify-content:space-between">
+        <span style="display:flex;align-items:center;gap:var(--space-2)">实时告警清单</span>
+        <span style="font-size:var(--text-xs);color:var(--state-error);font-weight:400">共 12 条未处理</span>
+      </div>
+      <div style="flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:6px;margin-top:var(--space-2)">
+        <div class="alarm-row" onclick="showToast('正在跳转告警详情...')" style="border-left:3px solid #ef4444">
+          <div style="display:flex;align-items:center;justify-content:space-between">
+            <span style="font-size:var(--text-sm);font-weight:var(--font-medium)">火灾告警</span>
+            <span style="font-size:var(--text-xs);color:#ef4444;font-weight:500">紧急</span>
+          </div>
+          <div style="font-size:var(--text-xs);color:var(--dashboard-muted);margin-top:2px">1号仓库温感探测器A</div>
+          <div style="font-size:var(--text-xs);color:var(--dashboard-muted);margin-top:2px">杭州市萧山区</div>
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-top:4px">
+            <span style="font-size:var(--text-xs);color:var(--dashboard-muted)">14:32:18</span>
+            <span style="font-size:var(--text-xs);color:#f59e0b">处置中</span>
+          </div>
+        </div>
+        <div class="alarm-row" onclick="showToast('正在跳转告警详情...')" style="border-left:3px solid #ef4444">
+          <div style="display:flex;align-items:center;justify-content:space-between">
+            <span style="font-size:var(--text-sm);font-weight:var(--font-medium)">火灾告警</span>
+            <span style="font-size:var(--text-xs);color:#ef4444;font-weight:500">紧急</span>
+          </div>
+          <div style="font-size:var(--text-xs);color:var(--dashboard-muted);margin-top:2px">2号车间烟雾探测器B</div>
+          <div style="font-size:var(--text-xs);color:var(--dashboard-muted);margin-top:2px">宁波市北仑区</div>
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-top:4px">
+            <span style="font-size:var(--text-xs);color:var(--dashboard-muted)">14:28:05</span>
+            <span style="font-size:var(--text-xs);color:#3b82f6">已确认</span>
+          </div>
+        </div>
+        <div class="alarm-row" onclick="showToast('正在跳转告警详情...')" style="border-left:3px solid #f59e0b">
+          <div style="display:flex;align-items:center;justify-content:space-between">
+            <span style="font-size:var(--text-sm);font-weight:var(--font-medium)">烟雾告警</span>
+            <span style="font-size:var(--text-xs);color:#f59e0b;font-weight:500">重要</span>
+          </div>
+          <div style="font-size:var(--text-xs);color:var(--dashboard-muted);margin-top:2px">3号厂房感烟探测器C</div>
+          <div style="font-size:var(--text-xs);color:var(--dashboard-muted);margin-top:2px">温州市龙湾区</div>
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-top:4px">
+            <span style="font-size:var(--text-xs);color:var(--dashboard-muted)">14:25:42</span>
+            <span style="font-size:var(--text-xs);color:#f59e0b">处置中</span>
+          </div>
+        </div>
+        <div class="alarm-row" onclick="showToast('正在跳转告警详情...')" style="border-left:3px solid #ef4444">
+          <div style="display:flex;align-items:center;justify-content:space-between">
+            <span style="font-size:var(--text-sm);font-weight:var(--font-medium)">火灾告警</span>
+            <span style="font-size:var(--text-xs);color:#ef4444;font-weight:500">紧急</span>
+          </div>
+          <div style="font-size:var(--text-xs);color:var(--dashboard-muted);margin-top:2px">食堂厨房温感E</div>
+          <div style="font-size:var(--text-xs);color:var(--dashboard-muted);margin-top:2px">嘉兴市南湖区</div>
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-top:4px">
+            <span style="font-size:var(--text-xs);color:var(--dashboard-muted)">14:18:11</span>
+            <span style="font-size:var(--text-xs);color:#f59e0b">处置中</span>
+          </div>
+        </div>
+        <div class="alarm-row" onclick="showToast('正在跳转告警详情...')" style="border-left:3px solid #f59e0b">
+          <div style="display:flex;align-items:center;justify-content:space-between">
+            <span style="font-size:var(--text-sm);font-weight:var(--font-medium)">烟雾告警</span>
+            <span style="font-size:var(--text-xs);color:#f59e0b;font-weight:500">重要</span>
+          </div>
+          <div style="font-size:var(--text-xs);color:var(--dashboard-muted);margin-top:2px">地下车库烟感F</div>
+          <div style="font-size:var(--text-xs);color:var(--dashboard-muted);margin-top:2px">杭州市滨江区</div>
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-top:4px">
+            <span style="font-size:var(--text-xs);color:var(--dashboard-muted)">14:15:27</span>
+            <span style="font-size:var(--text-xs);color:var(--dashboard-muted)">待处理</span>
+          </div>
+        </div>
+        <div class="alarm-row" onclick="showToast('正在跳转告警详情...')" style="border-left:3px solid #ef4444">
+          <div style="display:flex;align-items:center;justify-content:space-between">
+            <span style="font-size:var(--text-sm);font-weight:var(--font-medium)">火灾告警</span>
+            <span style="font-size:var(--text-xs);color:#ef4444;font-weight:500">紧急</span>
+          </div>
+          <div style="font-size:var(--text-xs);color:var(--dashboard-muted);margin-top:2px">配电房温感G</div>
+          <div style="font-size:var(--text-xs);color:var(--dashboard-muted);margin-top:2px">宁波市海曙区</div>
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-top:4px">
+            <span style="font-size:var(--text-xs);color:var(--dashboard-muted)">14:10:59</span>
+            <span style="font-size:var(--text-xs);color:#3b82f6">已确认</span>
+          </div>
+        </div>
+        <div class="alarm-row" onclick="showToast('正在跳转告警详情...')" style="border-left:3px solid #3b82f6">
+          <div style="display:flex;align-items:center;justify-content:space-between">
+            <span style="font-size:var(--text-sm);font-weight:var(--font-medium)">温度异常</span>
+            <span style="font-size:var(--text-xs);color:#3b82f6;font-weight:500">一般</span>
+          </div>
+          <div style="font-size:var(--text-xs);color:var(--dashboard-muted);margin-top:2px">锅炉房压力传感器H</div>
+          <div style="font-size:var(--text-xs);color:var(--dashboard-muted);margin-top:2px">温州市龙湾区</div>
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-top:4px">
+            <span style="font-size:var(--text-xs);color:var(--dashboard-muted)">14:08:14</span>
+            <span style="font-size:var(--text-xs);color:#f59e0b">处置中</span>
+          </div>
+        </div>
+        <div class="alarm-row" onclick="showToast('正在跳转告警详情...')" style="border-left:3px solid #ef4444">
+          <div style="display:flex;align-items:center;justify-content:space-between">
+            <span style="font-size:var(--text-sm);font-weight:var(--font-medium)">火灾告警</span>
+            <span style="font-size:var(--text-xs);color:#ef4444;font-weight:500">紧急</span>
+          </div>
+          <div style="font-size:var(--text-xs);color:var(--dashboard-muted);margin-top:2px">化学品仓库感温I</div>
+          <div style="font-size:var(--text-xs);color:var(--dashboard-muted);margin-top:2px">杭州市萧山区</div>
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-top:4px">
+            <span style="font-size:var(--text-xs);color:var(--dashboard-muted)">14:05:42</span>
+            <span style="font-size:var(--text-xs);color:#3b82f6">已确认</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+
+<!-- Scripts -->
+<script src="../assets/role-permission.js"></script>
+<script>
+(function() {
+  'use strict';
+
+  // ========== LIVE CLOCK ==========
+  function updateClock() {
+    var now = new Date();
+    var y = now.getFullYear();
+    var m = String(now.getMonth() + 1).padStart(2, '0');
+    var d = String(now.getDate()).padStart(2, '0');
+    var h = String(now.getHours()).padStart(2, '0');
+    var mi = String(now.getMinutes()).padStart(2, '0');
+    var s = String(now.getSeconds()).padStart(2, '0');
+    var el = document.getElementById('liveClock');
+    if (el) el.textContent = y + '-' + m + '-' + d + ' ' + h + ':' + mi + ':' + s;
+  }
+  updateClock();
+  setInterval(updateClock, 1000);
+
+  // ========== FULLSCREEN ==========
+  window.toggleFullscreen = function() {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen().catch(function(){});
+    } else {
+      document.exitFullscreen().catch(function(){});
+    }
+  };
+
+  // ========== AREA SELECTOR ==========
+  window.switchArea = function(btn, level) {
+    document.querySelectorAll('.area-btn').forEach(function(b) { b.classList.remove('active'); });
+    btn.classList.add('active');
+    showToast('已切换至' + level + '级视图');
+  };
+
+  // ========== TOAST ==========
+  window.showToast = function(msg) {
+    var container = document.getElementById('toastContainer');
+    var toast = document.createElement('div');
+    toast.className = 'toast';
+    toast.textContent = msg;
+    container.appendChild(toast);
+    setTimeout(function() {
+      toast.classList.add('out');
+      setTimeout(function() { toast.remove(); }, 300);
+    }, 2500);
+  };
+
+  // ========== ALARM TYPE DONUT CHART ==========
+  var alarmTypeCtx = document.getElementById('alarmTypeChart').getContext('2d');
+  new Chart(alarmTypeCtx, {
+    type: 'doughnut',
+    data: {
+      labels: ['火情', '烟雾', '其他'],
+      datasets: [{
+        data: [68, 24, 8],
+        backgroundColor: ['#ef4444', '#f59e0b', '#3b82f6'],
+        borderColor: '#111d33',
+        borderWidth: 3,
+        hoverOffset: 6
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      cutout: '65%',
+      plugins: {
+        legend: {
+          position: 'bottom',
+          labels: { color: '#8899aa', font: { size: 11, family: "'PingFang SC','Microsoft YaHei',sans-serif" }, padding: 12, usePointStyle: true, pointStyleWidth: 8 }
+        },
+        tooltip: {
+          backgroundColor: '#1a2332',
+          borderColor: '#1e3050',
+          borderWidth: 1,
+          titleColor: '#e2e8f0',
+          bodyColor: '#8899aa',
+          callbacks: { label: function(ctx) { return ctx.label + '：' + ctx.parsed + '%'; } }
+        }
+      }
+    }
+  });
+
+  // ========== ALARM TREND LINE CHART ==========
+  var trendLabels24h = [];
+  var trendData24h = [3, 2, 5, 4, 3, 6, 8, 12, 15, 18, 22, 20, 17, 14, 10, 8, 12, 16, 19, 23, 20, 15, 10, 7];
+  for (var i = 0; i < 24; i++) { trendLabels24h.push(String(i).padStart(2, '0') + ':00'); }
+
+  var trendDataDay = [42, 38, 55, 48, 62, 58, 44, 51, 46, 60, 53, 41, 47, 56];
+  var trendLabelsDay = ['6/29', '6/30', '7/1', '7/2', '7/3', '7/4', '7/5', '7/6', '7/7', '7/8', '7/9', '7/10', '7/11', '7/12'];
+
+  var trendDataWeek = [186, 205, 198, 230, 242, 218, 195];
+  var trendLabelsWeek = ['第1周', '第2周', '第3周', '第4周', '第5周', '第6周', '第7周'];
+
+  var alarmTrendCtx = document.getElementById('alarmTrendChart').getContext('2d');
+  var trendChart = new Chart(alarmTrendCtx, {
+    type: 'line',
+    data: {
+      labels: trendLabels24h,
+      datasets: [{
+        label: '告警数',
+        data: trendData24h,
+        borderColor: '#3b82f6',
+        backgroundColor: 'rgba(59,130,246,.12)',
+        borderWidth: 2,
+        fill: true,
+        tension: 0.4,
+        pointRadius: 0,
+        pointHoverRadius: 4,
+        pointHoverBackgroundColor: '#3b82f6'
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { intersect: false, mode: 'index' },
+      scales: {
+        x: {
+          grid: { color: '#1e3050' },
+          ticks: { color: '#8899aa', font: { size: 9 }, maxRotation: 0, maxTicksLimit: 8 },
+          border: { color: '#1e3050' }
+        },
+        y: {
+          grid: { color: '#1e3050' },
+          ticks: { color: '#8899aa', font: { size: 10 } },
+          border: { color: '#1e3050' },
+          beginAtZero: true
+        }
+      },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: '#1a2332',
+          borderColor: '#1e3050',
+          borderWidth: 1,
+          titleColor: '#e2e8f0',
+          bodyColor: '#8899aa'
+        }
+      }
+    }
+  });
+
+  window.switchTrend = function(btn, mode) {
+    document.querySelectorAll('.toggle-group .toggle-btn').forEach(function(b) { b.classList.remove('active'); });
+    btn.classList.add('active');
+    if (mode === 'hour') {
+      trendChart.data.labels = trendLabels24h;
+      trendChart.data.datasets[0].data = trendData24h;
+    } else if (mode === 'day') {
+      trendChart.data.labels = trendLabelsDay;
+      trendChart.data.datasets[0].data = trendDataDay;
+    } else {
+      trendChart.data.labels = trendLabelsWeek;
+      trendChart.data.datasets[0].data = trendDataWeek;
+    }
+    trendChart.update('active');
+  };
+
+  // ========== MAP MARKERS ==========
+  var markers = document.querySelectorAll('.alarm-marker');
+  var popup = document.getElementById('markerPopup');
+  var activeMarker = null;
+
+  markers.forEach(function(marker) {
+    marker.addEventListener('click', function(e) {
+      e.stopPropagation();
+      if (activeMarker === marker) { closePopup(); return; }
+      activeMarker = marker;
+
+      var name = marker.getAttribute('data-name');
+      var type = marker.getAttribute('data-type');
+      var time = marker.getAttribute('data-time');
+      var status = marker.getAttribute('data-status');
+
+      document.getElementById('popupDeviceName').textContent = name;
+
+      var tag = document.getElementById('popupAlarmTag');
+      tag.textContent = type;
+      if (type === '火情') { tag.style.background = 'rgba(239,68,68,.15)'; tag.style.color = '#ef4444'; }
+      else if (type === '烟雾') { tag.style.background = 'rgba(245,158,11,.15)'; tag.style.color = '#f59e0b'; }
+      else { tag.style.background = 'rgba(59,130,246,.15)'; tag.style.color = '#3b82f6'; }
+
+      document.getElementById('popupTime').textContent = '今日 ' + time;
+      document.getElementById('popupStatus').textContent = status;
+
+      // Position popup
+      var rect = marker.getBoundingClientRect();
+      var containerRect = document.getElementById('mapContainer').getBoundingClientRect();
+      var left = rect.left - containerRect.left + rect.width + 10;
+      var top = rect.top - containerRect.top - 20;
+
+      // Keep popup in view
+      if (left + 270 > containerRect.width) left = rect.left - containerRect.left - 270;
+      if (top + 200 > containerRect.height) top = containerRect.height - 220;
+      if (top < 10) top = 10;
+
+      popup.style.left = left + 'px';
+      popup.style.top = top + 'px';
+      popup.classList.add('show');
+    });
+  });
+
+  window.closePopup = function() {
+    popup.classList.remove('show');
+    activeMarker = null;
+  };
+
+  document.getElementById('mapContainer').addEventListener('click', function(e) {
+    if (!e.target.closest('.alarm-marker') && !e.target.closest('.marker-popup')) {
+      closePopup();
+    }
+  });
+
+  // ========== ALARM TICKER ==========
+  var tickerPaused = false;
+  window.toggleTicker = function() {
+    tickerPaused = !tickerPaused;
+    var track = document.getElementById('tickerTrack');
+    if (tickerPaused) {
+      track.classList.add('paused');
+      showToast('告警滚动已暂停，点击恢复');
+    } else {
+      track.classList.remove('paused');
+      showToast('告警滚动已恢复');
+    }
+  };
+
+  // ========== FACTORY CHANGED EVENT LISTENER ==========
+  document.addEventListener('factoryChanged', function(e) {
+    var name = e.detail.factoryName || '';
+    showToast('已切换至：' + name);
+    // Here you could refresh charts/data based on the new factory
+  });
+
+})();
+</script>
+</body>
+</html>
