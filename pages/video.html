@@ -1,0 +1,1168 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>实时视频 - 视联网消防告警运营平台</title>
+
+<link rel="stylesheet" href="../colors_and_type.css">
+<script src="../assets/role-permission.js"></script>
+<style>
+body{font-family:var(--font-sans);background:var(--color-bg);color:var(--color-text-primary);margin:0;overflow:hidden;height:100vh}
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-thumb{background:#c1c1c1;border-radius:4px}
+::-webkit-scrollbar-track{background:transparent}
+.sidebar{width:var(--sidebar-w);min-width:var(--sidebar-w);background:var(--sidebar-bg);height:100vh;display:flex;flex-direction:column;transition:width .25s,transform .25s;overflow:hidden;position:relative;z-index:100}
+.sidebar.collapsed{width:64px;min-width:64px}
+.sidebar.collapsed .sidebar-text,.sidebar.collapsed .group-arrow,.sidebar.collapsed .sidebar-user-info{display:none}
+.sidebar.collapsed .menu-item{justify-content:center;padding-left:0;padding-right:0}
+.sidebar.collapsed .menu-item .menu-icon{margin-right:0}
+.sidebar.collapsed .group-header{justify-content:center;padding-left:0;padding-right:0}
+.sidebar.collapsed .group-header .group-label{display:none}
+.group-header{display:flex;align-items:center;justify-content:space-between;padding:10px 16px 6px;cursor:pointer;color:#8899aa;font-size:12px;font-weight:600;letter-spacing:.5px;user-select:none}
+.group-header:hover{color:#a0b4c8}
+.group-label{flex:1;white-space:nowrap}
+.group-arrow{transition:transform .2s;font-size:10px;color:#667788}
+.group-arrow.open{transform:rotate(90deg)}
+.group-menu{overflow:hidden;transition:max-height .3s ease}
+.group-menu.closed{max-height:0!important}
+.menu-item{display:flex;align-items:center;padding:9px 16px 9px 20px;margin:2px 8px;border-radius:var(--radius-md);color:var(--sidebar-text);text-decoration:none;font-size:var(--text-sm);cursor:pointer;transition:all .15s;white-space:nowrap;border-left:3px solid transparent}
+.menu-item:hover{background:rgba(255,255,255,.08);color:#fff}
+.menu-item.active{background:var(--sidebar-active-bg);color:#fff;font-weight:var(--font-medium);border-left:3px solid #3b82f6}
+.menu-icon{width:18px;height:18px;margin-right:10px;flex-shrink:0;display:flex;align-items:center;justify-content:center}
+.sidebar-text{flex:1;overflow:hidden;text-overflow:ellipsis}
+.topbar{height:56px;background:var(--color-surface);border-bottom:1px solid var(--color-border);display:flex;align-items:center;padding:0 var(--space-6);gap:var(--space-4);flex-shrink:0}
+.breadcrumb{font-size:var(--text-sm);color:var(--color-text-secondary)}
+.breadcrumb span{color:var(--color-text-muted)}
+.breadcrumb a{color:var(--color-text-secondary);text-decoration:none}
+.breadcrumb a:hover{color:var(--color-primary)}
+.topbar-search{position:relative}
+.topbar-search input{width:220px;height:34px;border:1px solid var(--color-border);border-radius:var(--radius-md);padding:0 12px 0 34px;font-size:var(--text-sm);background:var(--color-bg);outline:none;transition:border-color .2s}
+.topbar-search input:focus{border-color:var(--color-primary)}
+.topbar-search svg{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--color-text-muted)}
+.bell-btn{position:relative;width:34px;height:34px;display:flex;align-items:center;justify-content:center;border-radius:var(--radius-md);border:1px solid var(--color-border);background:var(--color-surface);cursor:pointer;transition:all .15s}
+.bell-btn:hover{background:var(--color-bg);border-color:var(--color-primary)}
+.bell-badge{position:absolute;top:-4px;right:-4px;background:var(--state-error);color:#fff;font-size:10px;font-weight:700;min-width:16px;height:16px;border-radius:8px;display:flex;align-items:center;justify-content:center;padding:0 4px}
+.bell-dropdown{position:absolute;top:100%;right:0;margin-top:4px;width:320px;background:var(--color-surface);border:1px solid var(--color-border);border-radius:var(--radius-lg);box-shadow:var(--shadow-lg);z-index:400;display:none}
+.bell-dropdown.show{display:block}
+.bell-dd-header{padding:12px 16px;border-bottom:1px solid var(--color-border-light);font-size:var(--text-sm);font-weight:var(--font-semibold)}
+.bell-dd-item{display:flex;align-items:flex-start;gap:10px;padding:10px 16px;border-bottom:1px solid var(--color-border-light);cursor:pointer;transition:background .1s}
+.bell-dd-item:last-child{border-bottom:none}
+.bell-dd-item:hover{background:var(--color-bg)}
+.bell-dd-dot{width:8px;height:8px;border-radius:50%;background:var(--state-error);margin-top:4px;flex-shrink:0}
+.bell-dd-text{font-size:var(--text-sm);color:var(--color-text-primary);line-height:1.4}
+.bell-dd-time{font-size:var(--text-xs);color:var(--color-text-muted);margin-top:2px}
+.user-dropdown{position:relative;cursor:pointer;display:flex;align-items:center;gap:8px;padding:4px 10px;border-radius:var(--radius-md);transition:background .15s}
+.user-dropdown:hover{background:var(--color-bg)}
+.user-avatar{width:30px;height:30px;border-radius:50%;background:var(--color-primary);color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600}
+.user-dd-menu{position:absolute;top:100%;right:0;margin-top:4px;width:150px;background:var(--color-surface);border:1px solid var(--color-border);border-radius:var(--radius-md);box-shadow:var(--shadow-lg);z-index:400;display:none}
+.user-dd-menu.show{display:block}
+.user-dd-item{padding:8px 14px;font-size:var(--text-sm);cursor:pointer;transition:background .1s;color:var(--color-text-primary)}
+.user-dd-item:hover{background:var(--color-bg)}
+.sidebar-user{padding:12px 16px;border-top:1px solid rgba(255,255,255,.08);display:flex;align-items:center;gap:10px;margin-top:auto}
+.sidebar-user-avatar{width:32px;height:32px;border-radius:50%;background:var(--color-primary);color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;flex-shrink:0}
+.sidebar-user-info{overflow:hidden}
+.sidebar-user-name{font-size:var(--text-sm);color:#fff;font-weight:var(--font-medium)}
+.sidebar-user-role{font-size:var(--text-xs);color:var(--sidebar-text)}
+/* Sidebar styles */
+  
+  
+
+  /* Main layout */
+
+  /* Topbar */
+
+  /* Device tree */
+  .device-tree-panel {
+    background: var(--color-surface);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--color-border);
+    height: calc(100vh - 56px - 32px);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .device-tree-header {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--color-border);
+  }
+  .device-tree-search {
+    width: 100%;
+    height: 34px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    padding: 0 12px 0 34px;
+    font-size: var(--text-sm);
+    background: var(--color-bg);
+    color: var(--color-text-primary);
+    outline: none;
+    transition: all 0.2s;
+  }
+  .device-tree-search:focus {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px rgba(30,90,168,0.1);
+  }
+  .device-tree-search-wrapper {
+    position: relative;
+  }
+  .device-tree-search-wrapper .icon {
+    position: absolute;
+    left: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--color-text-muted);
+  }
+  .tree-node {
+    user-select: none;
+  }
+  .tree-node-row {
+    display: flex;
+    align-items: center;
+    padding: 6px 12px;
+    cursor: pointer;
+    font-size: var(--text-sm);
+    color: var(--color-text-primary);
+    transition: background 0.12s;
+    gap: 6px;
+  }
+  .tree-node-row:hover {
+    background: var(--color-bg);
+  }
+  .tree-node-row.active {
+    background: var(--color-primary-bg);
+    color: var(--color-primary);
+  }
+  .tree-toggle {
+    width: 18px;
+    height: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.2s;
+    flex-shrink: 0;
+    color: var(--color-text-muted);
+  }
+  .tree-toggle.expanded {
+    transform: rotate(90deg);
+  }
+  .tree-toggle.hidden {
+    visibility: hidden;
+  }
+  .tree-icon {
+    flex-shrink: 0;
+  }
+  .tree-children {
+    display: none;
+  }
+  .tree-children.open {
+    display: block;
+  }
+  .status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .status-dot.online { background: var(--state-success); }
+  .status-dot.offline { background: #9ca3af; }
+  .status-dot.alarm { background: var(--state-error); animation: pulse-alarm 1.5s infinite; }
+  @keyframes pulse-alarm {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(220,38,38,0.4); }
+    50% { box-shadow: 0 0 0 4px rgba(220,38,38,0); }
+  }
+
+  /* Video area */
+  .video-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    height: calc(100vh - 56px - 32px);
+  }
+  .video-toolbar {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+    padding: 10px 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-shrink: 0;
+  }
+  .toolbar-group {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .toolbar-btn {
+    width: 34px;
+    height: 34px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    background: var(--color-surface);
+    cursor: pointer;
+    transition: all 0.15s;
+    color: var(--color-text-secondary);
+    font-size: var(--text-sm);
+    font-weight: var(--font-medium);
+  }
+  .toolbar-btn:hover {
+    border-color: var(--color-primary);
+    color: var(--color-primary);
+    background: var(--color-primary-bg);
+  }
+  .toolbar-btn.active {
+    background: var(--color-primary);
+    color: #fff;
+    border-color: var(--color-primary);
+  }
+  .toolbar-separator {
+    width: 1px;
+    height: 24px;
+    background: var(--color-border);
+    margin: 0 4px;
+  }
+  .toggle-switch {
+    display: flex;
+    align-items: center;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+  }
+  .toggle-option {
+    padding: 6px 14px;
+    font-size: var(--text-sm);
+    cursor: pointer;
+    transition: all 0.15s;
+    color: var(--color-text-secondary);
+    background: var(--color-surface);
+  }
+  .toggle-option.active {
+    background: var(--color-primary);
+    color: #fff;
+  }
+  .toggle-option:hover:not(.active) {
+    background: var(--color-bg);
+  }
+
+  /* Video grid */
+  .video-grid-wrapper {
+    flex: 1;
+    background: #111827;
+    border: 1px solid var(--color-border);
+    border-top: none;
+    border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+    overflow: hidden;
+    position: relative;
+  }
+  .video-grid {
+    display: grid;
+    gap: 2px;
+    padding: 2px;
+    width: 100%;
+    height: 100%;
+    background: #111827;
+  }
+  .video-grid.grid-1 { grid-template-columns: 1fr; grid-template-rows: 1fr; }
+  .video-grid.grid-4 { grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; }
+  .video-grid.grid-9 { grid-template-columns: 1fr 1fr 1fr; grid-template-rows: 1fr 1fr 1fr; }
+  .video-grid.grid-16 { grid-template-columns: 1fr 1fr 1fr 1fr; grid-template-rows: 1fr 1fr 1fr 1fr; }
+
+  .video-cell {
+    background: #0a0f1a;
+    border-radius: var(--radius-sm);
+    position: relative;
+    overflow: hidden;
+    cursor: pointer;
+  }
+  .video-cell:hover .video-cell-overlay {
+    opacity: 1;
+  }
+  .video-cell-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .video-cell-placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    color: #4b5563;
+  }
+  .video-cell-placeholder svg {
+    opacity: 0.4;
+  }
+  .video-cell-info {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 8px 10px;
+    background: linear-gradient(transparent, rgba(0,0,0,0.8));
+    color: #e5e7eb;
+    font-size: var(--text-xs);
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+  }
+  .video-cell-name {
+    font-weight: var(--font-medium);
+  }
+  .video-cell-time {
+    color: #9ca3af;
+  }
+  .video-cell-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(0,0,0,0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.15s;
+  }
+  .video-cell-overlay .play-btn {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: rgba(30,90,168,0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+  }
+  .video-cell.selected {
+    outline: 2px solid var(--color-primary-light);
+    outline-offset: -2px;
+  }
+
+  /* PTZ Panel */
+  .ptz-panel {
+    position: absolute;
+    bottom: 12px;
+    right: 12px;
+    width: 180px;
+    background: rgba(26,35,50,0.92);
+    backdrop-filter: blur(8px);
+    border-radius: var(--radius-lg);
+    border: 1px solid rgba(255,255,255,0.1);
+    padding: 14px;
+    z-index: 50;
+    color: #e2e8f0;
+    display: none;
+  }
+  .ptz-panel.open {
+    display: block;
+  }
+  .ptz-title {
+    font-size: var(--text-sm);
+    font-weight: var(--font-semibold);
+    margin-bottom: 10px;
+    text-align: center;
+  }
+  .ptz-directions {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    grid-template-rows: 1fr 1fr 1fr;
+    gap: 4px;
+    width: 120px;
+    margin: 0 auto 12px;
+  }
+  .ptz-dir-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: var(--radius-sm);
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.15);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.15s;
+    color: #e2e8f0;
+    margin: auto;
+  }
+  .ptz-dir-btn:hover {
+    background: rgba(30,90,168,0.6);
+    border-color: rgba(30,90,168,0.8);
+  }
+  .ptz-dir-btn:active {
+    background: rgba(30,90,168,0.9);
+  }
+  .ptz-zoom-row, .ptz-focus-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+    font-size: var(--text-xs);
+    color: #9ca3af;
+  }
+  .ptz-zoom-row label, .ptz-focus-row label {
+    width: 32px;
+    flex-shrink: 0;
+  }
+  .ptz-slider {
+    flex: 1;
+    -webkit-appearance: none;
+    height: 4px;
+    border-radius: 2px;
+    background: rgba(255,255,255,0.2);
+    outline: none;
+  }
+  .ptz-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: var(--color-primary-light);
+    cursor: pointer;
+    border: 2px solid #fff;
+  }
+  .ptz-zoom-btn {
+    width: 24px;
+    height: 24px;
+    border-radius: var(--radius-sm);
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.15);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: #e2e8f0;
+    font-size: var(--text-xs);
+    font-weight: var(--font-bold);
+  }
+  .ptz-zoom-btn:hover {
+    background: rgba(30,90,168,0.6);
+  }
+
+  /* Timeline bar */
+  .timeline-bar {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-top: none;
+    border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+    padding: 10px 16px;
+    display: none;
+    flex-shrink: 0;
+  }
+  .timeline-bar.open {
+    display: block;
+  }
+  .timeline-controls {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .timeline-time-range {
+    font-size: var(--text-sm);
+    color: var(--color-text-secondary);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .timeline-time-input {
+    height: 30px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    padding: 0 8px;
+    font-size: var(--text-sm);
+    background: var(--color-bg);
+    color: var(--color-text-primary);
+    outline: none;
+  }
+  .timeline-time-input:focus {
+    border-color: var(--color-primary);
+  }
+  .timeline-play-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: var(--color-primary);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    border: none;
+    transition: all 0.15s;
+  }
+  .timeline-play-btn:hover {
+    background: var(--color-primary-dark);
+  }
+  .timeline-speed-group {
+    display: flex;
+    gap: 2px;
+  }
+  .timeline-speed-btn {
+    padding: 4px 10px;
+    font-size: var(--text-xs);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    background: var(--color-surface);
+    cursor: pointer;
+    color: var(--color-text-secondary);
+    transition: all 0.15s;
+  }
+  .timeline-speed-btn.active {
+    background: var(--color-primary);
+    color: #fff;
+    border-color: var(--color-primary);
+  }
+  .timeline-speed-btn:hover:not(.active) {
+    border-color: var(--color-primary);
+    color: var(--color-primary);
+  }
+  .timeline-progress {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .timeline-progress input[type="range"] {
+    flex: 1;
+    -webkit-appearance: none;
+    height: 6px;
+    border-radius: 3px;
+    background: var(--color-border);
+    outline: none;
+  }
+  .timeline-progress input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: var(--color-primary);
+    cursor: pointer;
+    border: 2px solid #fff;
+    box-shadow: var(--shadow-sm);
+  }
+  .timeline-current-time {
+    font-size: var(--text-sm);
+    color: var(--color-text-primary);
+    font-weight: var(--font-medium);
+    min-width: 60px;
+  }
+
+  /* Toast */
+  /* Scrollbar */
+  .device-tree-body::-webkit-scrollbar,
+  .device-tree-body::-webkit-scrollbar-thumb,
+
+  /* Fullscreen */
+  .video-grid-wrapper:fullscreen {
+    border-radius: 0;
+    border: none;
+  }
+.content-area{flex:1;overflow-y:auto;padding:var(--space-6)}
+.factory-switcher{display:flex;align-items:center;gap:6px;padding:4px 10px;border-radius:var(--radius-md);cursor:pointer;transition:background .15s;font-size:var(--text-sm);color:var(--color-text-secondary)}
+.factory-switcher:hover{background:var(--color-bg)}
+.factory-dropdown{position:absolute;top:100%;right:0;margin-top:4px;width:180px;background:var(--color-surface);border:1px solid var(--color-border);border-radius:var(--radius-md);box-shadow:var(--shadow-lg);z-index:400;display:none}
+.factory-dropdown.show{display:block}
+.factory-dd-item{padding:8px 14px;font-size:var(--text-sm);cursor:pointer;transition:background .1s;color:var(--color-text-primary)}
+.factory-dd-item:hover{background:var(--color-bg)}
+.factory-dd-item.active{color:var(--color-primary);font-weight:var(--font-medium)}
+</style>
+</head>
+<body>
+<div style="display:flex;height:100vh;overflow:hidden">
+<!-- SIDEBAR -->
+<aside class="sidebar" id="sidebar">
+<div style="padding:14px 16px;display:flex;align-items:center;gap:10px;border-bottom:1px solid rgba(255,255,255,.08)">
+<div style="width:32px;height:32px;background:var(--color-primary);border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg></div>
+<span class="sidebar-text" style="color:#fff;font-size:14px;font-weight:700">消防告警平台</span>
+</div>
+<nav style="flex:1;overflow-y:auto;padding:8px 0">
+<div onclick="toggleMenuGroup(this)" class="group-header"><span class="group-label">概览</span><span class="group-arrow">&#9654;</span></div>
+<div class="group-menu">
+<a href="javascript:void(0)" class="menu-item" onclick="navTo('dashboard.html')"><span class="menu-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></span><span class="sidebar-text">可视化大屏</span></a>
+</div>
+<div onclick="toggleMenuGroup(this)" class="group-header"><span class="group-label">告警管理</span><span class="group-arrow">&#9654;</span></div>
+<div class="group-menu">
+<a href="javascript:void(0)" class="menu-item" onclick="navTo('alarm-management.html')"><span class="menu-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg></span><span class="sidebar-text">告警中心</span></a>
+<a href="javascript:void(0)" class="menu-item" onclick="navTo('alarm-notification.html')"><span class="menu-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg></span><span class="sidebar-text">告警提示配置</span></a>
+</div>
+<div onclick="toggleMenuGroup(this)" class="group-header"><span class="group-label">运营管理</span><span class="group-arrow">&#9654;</span></div>
+<div class="group-menu">
+<a href="javascript:void(0)" class="menu-item" onclick="navTo('ops-review.html')"><span class="menu-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg></span><span class="sidebar-text">运营审核</span></a>
+<a href="javascript:void(0)" class="menu-item" onclick="navTo('audit-mgmt.html')"><span class="menu-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg></span><span class="sidebar-text">审核配置</span></a>
+                            <a href="javascript:void(0)" class="menu-item" onclick="navTo('audit-history.html')"><span class="menu-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg></span><span class="sidebar-text">历史审核</span></a>
+</div>
+<div onclick="toggleMenuGroup(this)" class="group-header"><span class="group-label">视频管理</span><span class="group-arrow">&#9654;</span></div>
+<div class="group-menu">
+<a href="javascript:void(0)" class="menu-item active" onclick="navTo('video.html')"><span class="menu-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg></span><span class="sidebar-text">实时视频</span></a>
+<a href="javascript:void(0)" class="menu-item" onclick="navTo('video-rotation.html')"><span class="menu-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg></span><span class="sidebar-text">轮播配置</span></a>
+</div>
+<div onclick="toggleMenuGroup(this)" class="group-header"><span class="group-label">系统管理</span><span class="group-arrow">&#9654;</span></div>
+<div class="group-menu">
+<a href="javascript:void(0)" class="menu-item" onclick="navTo('user-mgmt.html')"><span class="menu-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span><span class="sidebar-text">用户管理</span></a>
+<a href="javascript:void(0)" class="menu-item" onclick="navTo('role-mgmt.html')"><span class="menu-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></span><span class="sidebar-text">角色管理</span></a>
+<a href="javascript:void(0)" class="menu-item" onclick="navTo('org-mgmt.html')"><span class="menu-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/></svg></span><span class="sidebar-text">组织机构管理</span></a>
+<a href="javascript:void(0)" class="menu-item" onclick="navTo('tenant-mgmt.html')"><span class="menu-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg></span><span class="sidebar-text">客户管理</span></a>
+<a href="javascript:void(0)" class="menu-item" onclick="navTo('device-mgmt.html')"><span class="menu-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg></span><span class="sidebar-text">设备管理</span></a>
+</div>
+</nav>
+<div class="sidebar-user"><div class="sidebar-user-avatar">管</div><div class="sidebar-user-info"><div class="sidebar-user-name">系统管理员</div><div class="sidebar-user-role">admin</div></div></div>
+</aside>
+<!-- MAIN -->
+<div style="flex:1;display:flex;flex-direction:column;overflow:hidden">
+<!-- TOPBAR -->
+<header class="topbar">
+<button onclick="toggleSidebar()" style="background:none;border:none;cursor:pointer;padding:4px;display:flex;align-items:center" title="切换侧边栏"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--color-text-secondary)" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
+<div class="breadcrumb"><a href="javascript:void(0)" onclick="navTo('dashboard.html')">首页</a> <span>/</span> 视频管理 <span>/</span> <span style="color:var(--color-text-primary);font-weight:500">实时视频</span></div>
+<div style="flex:1"></div>
+<div class="topbar-search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="text" placeholder="搜索设备、告警..."></div>
+<div style="position:relative">
+<div class="bell-btn" onclick="toggleBell(event)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--color-text-secondary)" stroke-width="2"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg><span class="bell-badge">12</span></div>
+<div class="bell-dropdown" id="bellDropdown">
+<div class="bell-dd-header">通知消息 <span style="font-weight:400;color:var(--color-text-muted);font-size:12px;margin-left:8px">共12条</span></div>
+<div class="bell-dd-item"><div class="bell-dd-dot"></div><div><div class="bell-dd-text">A区3号仓库检测到烟雾告警，请及时审核</div><div class="bell-dd-time">2分钟前</div></div></div>
+<div class="bell-dd-item"><div class="bell-dd-dot"></div><div><div class="bell-dd-text">B区生产线温度异常告警待审核</div><div class="bell-dd-time">8分钟前</div></div></div>
+<div class="bell-dd-item"><div class="bell-dd-dot"></div><div><div class="bell-dd-text">C区充电站火情检测告警待处理</div><div class="bell-dd-time">15分钟前</div></div></div>
+<div class="bell-dd-item"><div class="bell-dd-dot"></div><div><div class="bell-dd-text">系统已自动归档3条过期告警记录</div><div class="bell-dd-time">30分钟前</div></div></div>
+<div class="bell-dd-item"><div class="bell-dd-dot" style="background:var(--color-text-muted)"></div><div><div class="bell-dd-text">D区摄像头设备离线，已派发维修工单</div><div class="bell-dd-time">1小时前</div></div></div>
+</div>
+</div>
+<div class="factory-switcher" id="factorySwitcher" onclick="RolePermission.toggleFactoryDD()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg><span id="factoryNameDisplay">全部工厂</span><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg><div class="factory-dropdown" id="factoryDropdown"></div></div>
+<div class="user-dropdown" onclick="toggleUser(event)"><div class="user-avatar">管</div><span style="font-size:var(--text-sm);color:var(--color-text-primary)">系统管理员</span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--color-text-muted)" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+<div class="user-dd-menu" id="userDropdown">
+<div class="user-dd-item" onclick="event.stopPropagation();navTo('user-mgmt.html')">用户管理</div>
+<div class="user-dd-item" onclick="event.stopPropagation();RolePermission.logout()" style="color:var(--state-error)">退出登录</div>
+</div>
+</div>
+</header>
+
+<!-- CONTENT -->
+<main class="content-area">
+    <div style="display:flex;gap:16px;height:calc(100vh - 56px - 32px);">
+      <!-- Left: Device Tree (25%) -->
+      <div style="width:25%;min-width:240px;max-width:320px;flex-shrink:0;">
+        <div class="device-tree-panel">
+          <div class="device-tree-header">
+            <div class="device-tree-search-wrapper">
+              <svg class="icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+              <input class="device-tree-search" type="text" placeholder="搜索设备..." id="deviceTreeSearch" oninput="filterDeviceTree(this.value)">
+            </div>
+          </div>
+          <div class="device-tree-body" id="deviceTreeBody">
+            <!-- Tree nodes generated by JS -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Right: Video Area (75%) -->
+      <div style="flex:1;min-width:0;">
+        <div class="video-panel">
+          <!-- Toolbar -->
+          <div class="video-toolbar">
+            <div class="toolbar-group">
+              <button class="toolbar-btn" data-grid="1" onclick="setGrid(1)" title="单画面">1</button>
+              <button class="toolbar-btn active" data-grid="4" onclick="setGrid(4)" title="四画面">4</button>
+              <button class="toolbar-btn" data-grid="9" onclick="setGrid(9)" title="九画面">9</button>
+              <button class="toolbar-btn" data-grid="16" onclick="setGrid(16)" title="十六画面">16</button>
+            </div>
+            <div class="toolbar-separator"></div>
+            <div class="toggle-switch">
+              <div class="toggle-option active" id="toggleLive" onclick="setMode('live')">实时预览</div>
+              <div class="toggle-option" id="togglePlayback" onclick="setMode('playback')">录像回放</div>
+            </div>
+            <div class="toolbar-separator"></div>
+            <button class="toolbar-btn" onclick="takeScreenshot()" title="抓拍">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+            </button>
+            <button class="toolbar-btn" onclick="togglePTZ()" title="云台控制" id="ptzToggleBtn">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 2v4m0 12v4M2 12h4m12 0h4"/></svg>
+            </button>
+            <button class="toolbar-btn" onclick="clearAllVideos()" title="清空视频窗口" style="color:var(--state-error);">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+            </button>
+            <div class="topbar-spacer"></div>
+            <button class="toolbar-btn" onclick="toggleFullscreen()" title="全屏">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>
+            </button>
+          </div>
+        </div>
+
+          <!-- Video Grid -->
+          <div class="video-grid-wrapper" id="videoGridWrapper">
+            <div class="video-grid grid-4" id="videoGrid">
+              <!-- Video cells generated by JS -->
+            </div>
+
+            <!-- PTZ Panel (floating) -->
+            <div class="ptz-panel" id="ptzPanel">
+              <div class="ptz-title">云台控制</div>
+              <div class="ptz-directions">
+                <div></div>
+                <div class="ptz-dir-btn" onclick="ptzControl('up')">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="18 15 12 9 6 15"/></svg>
+                </div>
+                <div></div>
+                <div class="ptz-dir-btn" onclick="ptzControl('left')">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+                </div>
+                <div class="ptz-dir-btn" onclick="ptzControl('home')" style="font-size:10px;font-weight:600;">中</div>
+                <div class="ptz-dir-btn" onclick="ptzControl('right')">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+                </div>
+                <div></div>
+                <div class="ptz-dir-btn" onclick="ptzControl('down')">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+                </div>
+                <div></div>
+              </div>
+              <div class="ptz-zoom-row">
+                <label>变倍</label>
+                <div class="ptz-zoom-btn" onclick="ptzZoom('-')">-</div>
+                <input type="range" class="ptz-slider" min="1" max="20" value="10" id="ptzZoomSlider">
+                <div class="ptz-zoom-btn" onclick="ptzZoom('+')">+</div>
+              </div>
+              <div class="ptz-focus-row">
+                <label>焦距</label>
+                <input type="range" class="ptz-slider" min="1" max="100" value="50" id="ptzFocusSlider">
+              </div>
+            </div>
+          </div>
+
+          <!-- Timeline (playback mode) -->
+          <div class="timeline-bar" id="timelineBar">
+            <div class="timeline-controls">
+              <div class="timeline-time-range">
+                <input type="date" class="timeline-time-input" id="timelineDate">
+                <input type="time" class="timeline-time-input" id="timelineStart" value="00:00">
+                <span>-</span>
+                <input type="time" class="timeline-time-input" id="timelineEnd" value="23:59">
+              </div>
+              <div class="toolbar-separator"></div>
+              <button class="timeline-play-btn" id="timelinePlayBtn" onclick="toggleTimelinePlay()">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" id="playIcon"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" id="pauseIcon" style="display:none;"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+              </button>
+              <div class="timeline-speed-group">
+                <button class="timeline-speed-btn" onclick="setSpeed(0.5,this)">0.5x</button>
+                <button class="timeline-speed-btn active" onclick="setSpeed(1,this)">1x</button>
+                <button class="timeline-speed-btn" onclick="setSpeed(2,this)">2x</button>
+                <button class="timeline-speed-btn" onclick="setSpeed(4,this)">4x</button>
+              </div>
+              <div class="toolbar-separator"></div>
+              <div class="timeline-progress">
+                <span class="timeline-current-time" id="timelineCurrentTime">00:00:00</span>
+                <input type="range" min="0" max="100" value="0" id="timelineSlider" oninput="updateTimelineTime(this.value)">
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script>
+
+// ==================== Toast ====================
+var toastTimer = null;
+function showToast(msg, type) {
+  type = type || 'success';
+  var toast = document.getElementById('toast');
+  var toastMsg = document.getElementById('toastMsg');
+  toast.className = 'toast ' + type;
+  toastMsg.textContent = msg;
+  clearTimeout(toastTimer);
+  setTimeout(function(){ toast.classList.add('show'); }, 10);
+  toastTimer = setTimeout(function(){ toast.classList.remove('show'); }, 2500);
+}
+
+// ==================== Device Tree ====================
+var deviceData = [
+  { id:'zj', name:'浙江省', type:'org', expanded:true, children:[
+    { id:'hz', name:'杭州市', type:'org', expanded:true, children:[
+      { id:'xs', name:'萧山区', type:'org', expanded:false, children:[
+        { id:'d1', name:'萧山消防器材厂-摄像头01', type:'device', status:'online' },
+        { id:'d2', name:'萧山消防器材厂-摄像头02', type:'device', status:'online' },
+        { id:'d3', name:'萧山消防器材厂-烟感01', type:'device', status:'alarm' }
+      ]},
+      { id:'xc', name:'西湖区', type:'org', expanded:false, children:[
+        { id:'d4', name:'西湖文化广场-摄像头01', type:'device', status:'online' },
+        { id:'d5', name:'西湖文化广场-摄像头02', type:'device', status:'offline' }
+      ]},
+      { id:'bj', name:'滨江区', type:'org', expanded:false, children:[
+        { id:'d6', name:'滨江产业园-摄像头01', type:'device', status:'online' },
+        { id:'d7', name:'滨江产业园-摄像头02', type:'device', status:'online' }
+      ]}
+    ]},
+    { id:'nb', name:'宁波市', type:'org', expanded:false, children:[
+      { id:'bl', name:'北仑区', type:'org', expanded:false, children:[
+        { id:'d8', name:'北仑化工厂-摄像头01', type:'device', status:'online' },
+        { id:'d9', name:'北仑化工厂-摄像头02', type:'device', status:'alarm' }
+      ]},
+      { id:'yz', name:'鄞州区', type:'org', expanded:false, children:[
+        { id:'d10', name:'鄞州商务中心-摄像头01', type:'device', status:'online' }
+      ]}
+    ]},
+    { id:'wz', name:'温州市', type:'org', expanded:false, children:[
+      { id:'lw', name:'龙湾区', type:'org', expanded:false, children:[
+        { id:'d11', name:'龙湾电子厂-摄像头01', type:'device', status:'online' },
+        { id:'d12', name:'龙湾电子厂-摄像头02', type:'device', status:'offline' }
+      ]},
+      { id:'ou', name:'瓯海区', type:'org', expanded:false, children:[
+        { id:'d13', name:'瓯海工业区-摄像头01', type:'device', status:'online' }
+      ]}
+    ]}
+  ]}
+];
+
+function renderDeviceTree(data, container, depth) {
+  depth = depth || 0;
+  data.forEach(function(node) {
+    var nodeEl = document.createElement('div');
+    nodeEl.className = 'tree-node';
+    nodeEl.setAttribute('data-id', node.id);
+    nodeEl.setAttribute('data-name', node.name);
+
+    var row = document.createElement('div');
+    row.className = 'tree-node-row';
+    row.style.paddingLeft = (12 + depth * 16) + 'px';
+
+    if (node.type === 'org') {
+      var toggle = document.createElement('span');
+      toggle.className = 'tree-toggle' + (node.expanded ? ' expanded' : '');
+      toggle.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>';
+      row.appendChild(toggle);
+
+      var icon = document.createElement('span');
+      icon.className = 'tree-icon';
+      var iconColor = depth === 0 ? '#f59e0b' : depth === 1 ? '#3b82f6' : '#6366f1';
+      icon.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="' + iconColor + '" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>';
+      row.appendChild(icon);
+
+      var label = document.createElement('span');
+      label.textContent = node.name;
+      label.style.flex = '1';
+      row.appendChild(label);
+
+      nodeEl.appendChild(row);
+
+      if (node.children && node.children.length > 0) {
+        var childrenEl = document.createElement('div');
+        childrenEl.className = 'tree-children' + (node.expanded ? ' open' : '');
+        childrenEl.id = 'tree-children-' + node.id;
+        renderDeviceTree(node.children, childrenEl, depth + 1);
+        nodeEl.appendChild(childrenEl);
+      }
+
+      row.onclick = function(e) {
+        e.stopPropagation();
+        toggle.classList.toggle('expanded');
+        childrenEl.classList.toggle('open');
+      };
+    } else {
+      var spacer = document.createElement('span');
+      spacer.className = 'tree-toggle hidden';
+      spacer.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>';
+      row.appendChild(spacer);
+
+      var statusDot = document.createElement('span');
+      statusDot.className = 'status-dot ' + node.status;
+      row.appendChild(statusDot);
+
+      var camIcon = document.createElement('span');
+      camIcon.className = 'tree-icon';
+      camIcon.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--color-text-muted)" stroke-width="2"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>';
+      row.appendChild(camIcon);
+
+      var label = document.createElement('span');
+      label.textContent = node.name;
+      label.style.flex = '1';
+      label.style.fontSize = 'var(--text-xs)';
+      label.style.overflow = 'hidden';
+      label.style.textOverflow = 'ellipsis';
+      label.style.whiteSpace = 'nowrap';
+      row.appendChild(label);
+
+      var onlineText = document.createElement('span');
+      onlineText.style.fontSize = 'var(--text-xs)';
+      onlineText.style.color = node.status === 'online' ? 'var(--state-success)' : node.status === 'alarm' ? 'var(--state-error)' : 'var(--color-text-muted)';
+      onlineText.textContent = node.status === 'online' ? '在线' : node.status === 'alarm' ? '告警' : '离线';
+      row.appendChild(onlineText);
+
+      nodeEl.appendChild(row);
+
+      row.onclick = function(e) {
+        e.stopPropagation();
+        document.querySelectorAll('.tree-node-row.active').forEach(function(r) { r.classList.remove('active'); });
+        row.classList.add('active');
+        playDevice(node);
+      };
+    }
+
+    container.appendChild(nodeEl);
+  });
+}
+
+function initDeviceTree() {
+  var body = document.getElementById('deviceTreeBody');
+  body.innerHTML = '';
+  renderDeviceTree(deviceData, body, 0);
+}
+
+function filterDeviceTree(keyword) {
+  var allNodes = document.querySelectorAll('.tree-node');
+  if (!keyword) {
+    allNodes.forEach(function(n) { n.style.display = ''; });
+    return;
+  }
+  keyword = keyword.toLowerCase();
+  allNodes.forEach(function(n) {
+    var name = (n.getAttribute('data-name') || '').toLowerCase();
+    if (name.indexOf(keyword) >= 0) {
+      n.style.display = '';
+      // Show parent nodes
+      var parent = n.parentElement;
+      while (parent && parent.id !== 'deviceTreeBody') {
+        if (parent.classList && parent.classList.contains('tree-children')) {
+          parent.classList.add('open');
+          parent.style.display = '';
+        }
+        if (parent.classList && parent.classList.contains('tree-node')) {
+          parent.style.display = '';
+        }
+        parent = parent.parentElement;
+      }
+    } else if (n.querySelector('.tree-node')) {
+      // org node: only hide if no visible children
+      n.style.display = '';
+    } else {
+      n.style.display = 'none';
+    }
+  });
+}
+
+// ==================== Video Grid ====================
+var currentGrid = 4;
+var currentMode = 'live';
+var selectedDevice = null;
+var videoDevices = [
+  { id:'d1', name:'萧山消防器材厂-摄像头01', hasImage:true },
+  null, null, null
+];
+
+function getNow() {
+  var d = new Date();
+  return d.getFullYear() + '-' +
+    String(d.getMonth()+1).padStart(2,'0') + '-' +
+    String(d.getDate()).padStart(2,'0') + ' ' +
+    String(d.getHours()).padStart(2,'0') + ':' +
+    String(d.getMinutes()).padStart(2,'0') + ':' +
+    String(d.getSeconds()).padStart(2,'0');
+}
+
+function renderVideoGrid() {
+  var grid = document.getElementById('videoGrid');
+  grid.innerHTML = '';
+  grid.className = 'video-grid grid-' + currentGrid;
+
+  for (var i = 0; i < currentGrid; i++) {
+    var cell = document.createElement('div');
+    cell.className = 'video-cell';
+    if (i === 0 && selectedDevice) cell.classList.add('selected');
+
+    var dev = videoDevices[i];
+    if (dev && dev.hasImage) {
+      var img = document.createElement('img');
+      img.className = 'video-cell-img';
+      img.src = '../assets/fire-detection-camera.jpg';
+      img.alt = dev.name;
+      img.onerror = function() { this.style.display='none'; this.parentElement.querySelector('.video-cell-placeholder').style.display='flex'; };
+      cell.appendChild(img);
+
+      // Placeholder in case image fails
+      var ph = document.createElement('div');
+      ph.className = 'video-cell-placeholder';
+      ph.style.display = 'none';
+      ph.innerHTML = '<svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg><span style="font-size:12px;">' + dev.name + '</span>';
+      cell.appendChild(ph);
+
+      var info = document.createElement('div');
+      info.className = 'video-cell-info';
+      info.innerHTML = '<span class="video-cell-name">' + dev.name + '</span><span class="video-cell-time">' + getNow() + '</span>';
+      cell.appendChild(info);
+    } else if (dev) {
+      var ph2 = document.createElement('div');
+      ph2.className = 'video-cell-placeholder';
+      ph2.innerHTML = '<svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg><span style="font-size:12px;">' + dev.name + '</span>';
+      cell.appendChild(ph2);
+
+      var info2 = document.createElement('div');
+      info2.className = 'video-cell-info';
+      info2.innerHTML = '<span class="video-cell-name">' + dev.name + '</span><span class="video-cell-time">' + getNow() + '</span>';
+      cell.appendChild(info2);
+    } else {
+      var ph3 = document.createElement('div');
+      ph3.className = 'video-cell-placeholder';
+      ph3.innerHTML = '<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><rect x="2" y="2" width="20" height="20" rx="2"/><line x1="2" y1="12" x2="22" y2="12"/><line x1="12" y1="2" x2="12" y2="22"/></svg><span style="font-size:12px;">点击选择设备播放</span>';
+      cell.appendChild(ph3);
+    }
+
+    // Hover overlay
+    var overlay = document.createElement('div');
+    overlay.className = 'video-cell-overlay';
+    overlay.innerHTML = '<div class="play-btn"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg></div>';
+    cell.appendChild(overlay);
+
+    (function(index) {
+      cell.onclick = function() {
+        document.querySelectorAll('.video-cell.selected').forEach(function(c){ c.classList.remove('selected'); });
+        cell.classList.add('selected');
+        if (videoDevices[index]) {
+          showToast('已选中: ' + videoDevices[index].name, 'info');
+        }
+      };
+    })(i);
+
+    grid.appendChild(cell);
+  }
+}
+
+function setGrid(n) {
+  currentGrid = n;
+  document.querySelectorAll('.toolbar-btn[data-grid]').forEach(function(btn) {
+    btn.classList.toggle('active', parseInt(btn.getAttribute('data-grid')) === n);
+  });
+  renderVideoGrid();
+}
+
+function playDevice(node) {
+  selectedDevice = node;
+  videoDevices[0] = { id: node.id, name: node.name, hasImage: true };
+  renderVideoGrid();
+  showToast('正在播放: ' + node.name, 'info');
+}
+
+// ==================== Mode Toggle ====================
+function setMode(mode) {
+  currentMode = mode;
+  document.getElementById('toggleLive').classList.toggle('active', mode === 'live');
+  document.getElementById('togglePlayback').classList.toggle('active', mode === 'playback');
+  document.getElementById('timelineBar').classList.toggle('open', mode === 'playback');
+}
+
+// ==================== Screenshot ====================
+function takeScreenshot() {
+  showToast('抓拍成功', 'success');
+}
+
+// ==================== Clear All Videos ====================
+function clearAllVideos() {
+  document.querySelectorAll('.video-cell').forEach(function(cell) {
+    cell.innerHTML = '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;color:var(--color-text-muted);gap:8px"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg><span style="font-size:var(--text-xs)">无视频信号</span></div>';
+  });
+  videoDevices = videoDevices.map(function() { return null; });
+  selectedDevice = null;
+  showToast('已清空所有视频窗口', 'success');
+}
+
+// ==================== PTZ ====================
+function togglePTZ() {
+  var panel = document.getElementById('ptzPanel');
+  var btn = document.getElementById('ptzToggleBtn');
+  panel.classList.toggle('open');
+  btn.classList.toggle('active', panel.classList.contains('open'));
+}
+
+function ptzControl(dir) {
+  showToast('云台控制: ' + ({up:'上移',down:'下移',left:'左移',right:'右移',home:'归位'}[dir] || dir), 'info');
+}
+
+function ptzZoom(op) {
+  var slider = document.getElementById('ptzZoomSlider');
+  var val = parseInt(slider.value);
+  if (op === '+') val = Math.min(20, val + 1);
+  else val = Math.max(1, val - 1);
+  slider.value = val;
+}
+
+// ==================== Fullscreen ====================
+function toggleFullscreen() {
+  var el = document.getElementById('videoGridWrapper');
+  if (!document.fullscreenElement) {
+    if (el.requestFullscreen) el.requestFullscreen();
+    else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
+  } else {
+    if (document.exitFullscreen) document.exitFullscreen();
+    else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
+  }
+}
+
+// ==================== Timeline ====================
+var timelinePlaying = false;
+var timelineInterval = null;
+var timelineValue = 0;
+
+function toggleTimelinePlay() {
+  timelinePlaying = !timelinePlaying;
+  document.getElementById('playIcon').style.display = timelinePlaying ? 'none' : 'block';
+  document.getElementById('pauseIcon').style.display = timelinePlaying ? 'block' : 'none';
+
+  if (timelinePlaying) {
+    timelineInterval = setInterval(function() {
+      timelineValue += 0.2;
+      if (timelineValue > 100) timelineValue = 0;
+      document.getElementById('timelineSlider').value = timelineValue;
+      updateTimelineTime(timelineValue);
+    }, 200);
+  } else {
+    clearInterval(timelineInterval);
+  }
+}
+
+function setSpeed(speed, btn) {
+  document.querySelectorAll('.timeline-speed-btn').forEach(function(b) { b.classList.remove('active'); });
+  btn.classList.add('active');
+  showToast('播放速度: ' + speed + 'x', 'info');
+}
+
+function updateTimelineTime(val) {
+  var totalSeconds = Math.floor((val / 100) * 86399);
+  var h = Math.floor(totalSeconds / 3600);
+  var m = Math.floor((totalSeconds % 3600) / 60);
+  var s = totalSeconds % 60;
+  document.getElementById('timelineCurrentTime').textContent =
+    String(h).padStart(2,'0') + ':' + String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
+}
+
+// ==================== Init ====================
+document.addEventListener('DOMContentLoaded', function() {
+  // Set today's date in timeline
+  var today = new Date().toISOString().split('T')[0];
+  var dateInput = document.getElementById('timelineDate');
+  if (dateInput) dateInput.value = today;
+
+  initDeviceTree();
+  renderVideoGrid();
+
+  // Update timestamps every second
+  setInterval(function() {
+    document.querySelectorAll('.video-cell-time').forEach(function(el) {
+      el.textContent = getNow();
+    });
+  }, 1000);
+});
+</script>
+<div class="toast-container" id="toastContainer"></div>
+<script>
+function toggleSidebar(){document.getElementById('sidebar').classList.toggle('collapsed')}
+function toggleMenuGroup(h){var a=h.querySelector('.group-arrow'),m=h.nextElementSibling;if(m){m.classList.toggle('closed');a.classList.toggle('open')}}
+function toggleBell(e){e.stopPropagation();document.getElementById('bellDropdown').classList.toggle('show');document.getElementById('userDropdown').classList.remove('show');var fd=document.getElementById('factoryDropdown');if(fd)fd.style.display='none'}
+function toggleUser(e){e.stopPropagation();document.getElementById('userDropdown').classList.toggle('show');document.getElementById('bellDropdown').classList.remove('show');var fd=document.getElementById('factoryDropdown');if(fd)fd.style.display='none'}
+document.addEventListener('click',function(){var bd=document.getElementById('bellDropdown');if(bd)bd.classList.remove('show');var ud=document.getElementById('userDropdown');if(ud)ud.classList.remove('show');var fd=document.getElementById('factoryDropdown');if(fd)fd.style.display='none'});
+function navTo(url){window.location.href=url}
+</script>
+</body>
+</html>
