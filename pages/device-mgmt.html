@@ -302,12 +302,14 @@ body{font-family:var(--font-sans);background:var(--color-bg);color:var(--color-t
       <table class="data-table">
         <thead>
           <tr>
-            <th>设备编号</th>
             <th>设备名称</th>
+            <th>所属组织</th>
+            <th>设备SN</th>
+            <th>IP</th>
+            <th>端口号</th>
+            <th>流媒体地址</th>
             <th>类型</th>
-            <th>所属区域</th>
             <th>状态</th>
-            <th>关联人员数</th>
             <th style="width:160px">操作</th>
           </tr>
         </thead>
@@ -389,14 +391,14 @@ document.addEventListener('click',function(){var bd=document.getElementById('bel
 
 // ======== DATA ========
 var devices = [
-  {id:'DEV-001',name:'A区大厅摄像头',type:'摄像头',area:'A区',status:'在线',personnelCount:3,personnel:{level1:[{name:'张伟',phone:'138xxxx1234',role:'区域负责人'}],level2:[{name:'李明',phone:'139xxxx5678',role:'安全主管'}],level3:[{name:'王强',phone:'137xxxx9012',role:'厂长'}]}},
-  {id:'DEV-002',name:'B区仓库烟感-01',type:'烟感',area:'B区',status:'在线',personnelCount:2,personnel:{level1:[{name:'赵刚',phone:'136xxxx3456',role:'消防队长'}],level2:[{name:'周婷',phone:'137xxxx7890',role:'安全管理员'}],level3:[]}},
-  {id:'DEV-003',name:'C区走廊温感-02',type:'温感',area:'C区',status:'离线',personnelCount:2,personnel:{level1:[{name:'孙磊',phone:'135xxxx2345',role:'安全主管'}],level2:[{name:'吴强',phone:'133xxxx4567',role:'设备管理员'}],level3:[]}},
-  {id:'DEV-004',name:'A区入口报警器',type:'报警器',area:'A区',status:'在线',personnelCount:3,personnel:{level1:[{name:'张伟',phone:'138xxxx1234',role:'区域负责人'}],level2:[{name:'李明',phone:'139xxxx5678',role:'安全主管'}],level3:[{name:'王强',phone:'137xxxx9012',role:'厂长'}]}},
-  {id:'DEV-005',name:'B区消防通道摄像头',type:'摄像头',area:'B区',status:'故障',personnelCount:1,personnel:{level1:[{name:'赵刚',phone:'136xxxx3456',role:'消防队长'}],level2:[],level3:[]}},
-  {id:'DEV-006',name:'C区仓库烟感-01',type:'烟感',area:'C区',status:'在线',personnelCount:2,personnel:{level1:[{name:'孙磊',phone:'135xxxx2345',role:'安全主管'}],level2:[{name:'周婷',phone:'137xxxx7890',role:'安全管理员'}],level3:[]}},
-  {id:'DEV-007',name:'A区配电房温感-01',type:'温感',area:'A区',status:'在线',personnelCount:2,personnel:{level1:[{name:'吴强',phone:'133xxxx4567',role:'设备管理员'}],level2:[{name:'李明',phone:'139xxxx5678',role:'安全主管'}],level3:[]}},
-  {id:'DEV-008',name:'D区出口摄像头',type:'摄像头',area:'D区',status:'在线',personnelCount:2,personnel:{level1:[{name:'张伟',phone:'138xxxx1234',role:'区域负责人'}],level2:[{name:'赵刚',phone:'136xxxx3456',role:'消防队长'}],level3:[]}}
+  {id:'DEV-001',name:'1号厂房摄像头-01',org:'消防器材厂',sn:'SN-CAM-001',ip:'192.168.1.101',port:'554',streamUrl:'rtsp://192.168.1.101:554/live',type:'摄像头',area:'A区',status:'在线',personnelCount:3,personnel:{level1:[{name:'张伟',phone:'138xxxx1234',role:'区域负责人'}],level2:[{name:'李明',phone:'139xxxx5678',role:'安全主管'}],level3:[{name:'王强',phone:'137xxxx9012',role:'厂长'}]}},
+  {id:'DEV-002',name:'2号仓库烟感-03',org:'化工厂',sn:'SN-SMK-003',ip:'192.168.1.102',port:'5060',streamUrl:'--',type:'烟感',area:'B区',status:'在线',personnelCount:2,personnel:{level1:[{name:'赵刚',phone:'136xxxx3456',role:'消防队长'}],level2:[{name:'周婷',phone:'137xxxx7890',role:'安全管理员'}],level3:[]}},
+  {id:'DEV-003',name:'3号楼温感-05',org:'电子厂',sn:'SN-TMP-005',ip:'192.168.1.103',port:'5060',streamUrl:'--',type:'温感',area:'C区',status:'离线',personnelCount:2,personnel:{level1:[{name:'孙磊',phone:'135xxxx2345',role:'安全主管'}],level2:[{name:'吴强',phone:'133xxxx4567',role:'设备管理员'}],level3:[]}},
+  {id:'DEV-004',name:'4号车间摄像头-07',org:'消防器材厂',sn:'SN-CAM-007',ip:'192.168.1.104',port:'554',streamUrl:'rtsp://192.168.1.104:554/live',type:'摄像头',area:'A区',status:'在线',personnelCount:3,personnel:{level1:[{name:'张伟',phone:'138xxxx1234',role:'区域负责人'}],level2:[{name:'李明',phone:'139xxxx5678',role:'安全主管'}],level3:[{name:'王强',phone:'137xxxx9012',role:'厂长'}]}},
+  {id:'DEV-005',name:'厂区入口摄像头-02',org:'化工厂',sn:'SN-CAM-002',ip:'192.168.1.105',port:'554',streamUrl:'rtsp://192.168.1.105:554/live',type:'摄像头',area:'B区',status:'故障',personnelCount:1,personnel:{level1:[{name:'赵刚',phone:'136xxxx3456',role:'消防队长'}],level2:[],level3:[]}},
+  {id:'DEV-006',name:'化学品库烟感-04',org:'电子厂',sn:'SN-SMK-004',ip:'192.168.1.106',port:'5060',streamUrl:'--',type:'烟感',area:'C区',status:'在线',personnelCount:2,personnel:{level1:[{name:'孙磊',phone:'135xxxx2345',role:'安全主管'}],level2:[{name:'周婷',phone:'137xxxx7890',role:'安全管理员'}],level3:[]}},
+  {id:'DEV-007',name:'配电房温感-06',org:'消防器材厂',sn:'SN-TMP-006',ip:'192.168.1.107',port:'5060',streamUrl:'--',type:'温感',area:'A区',status:'在线',personnelCount:2,personnel:{level1:[{name:'吴强',phone:'133xxxx4567',role:'设备管理员'}],level2:[{name:'李明',phone:'139xxxx5678',role:'安全主管'}],level3:[]}},
+  {id:'DEV-008',name:'办公楼摄像头-08',org:'化工厂',sn:'SN-CAM-008',ip:'192.168.1.108',port:'554',streamUrl:'rtsp://192.168.1.108:554/live',type:'摄像头',area:'D区',status:'在线',personnelCount:2,personnel:{level1:[{name:'张伟',phone:'138xxxx1234',role:'区域负责人'}],level2:[{name:'赵刚',phone:'136xxxx3456',role:'消防队长'}],level3:[]}}
 ];
 
 var editingDeviceId = null;
@@ -418,12 +420,14 @@ function renderDeviceTable(){
     var statusCls = d.status==='在线'?'green':d.status==='故障'?'red':'gray';
     var statusHtml = '<span class="status-tag '+statusCls+'"><span class="status-dot '+statusCls+'"></span>'+d.status+'</span>';
     html += '<tr>';
-    html += '<td style="font-family:monospace;font-size:var(--text-xs);color:var(--color-text-secondary)">'+d.id+'</td>';
     html += '<td style="font-weight:500">'+d.name+'</td>';
+    html += '<td>'+d.org+'</td>';
+    html += '<td style="font-family:monospace;font-size:var(--text-xs);color:var(--color-text-secondary)">'+d.sn+'</td>';
+    html += '<td style="font-family:monospace;font-size:var(--text-xs)">'+d.ip+'</td>';
+    html += '<td style="font-family:monospace;font-size:var(--text-xs)">'+d.port+'</td>';
+    html += '<td style="font-family:monospace;font-size:11px;color:var(--color-text-muted);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="'+d.streamUrl+'">'+d.streamUrl+'</td>';
     html += '<td>'+d.type+'</td>';
-    html += '<td>'+d.area+'</td>';
     html += '<td>'+statusHtml+'</td>';
-    html += '<td>'+d.personnelCount+'人</td>';
     html += '<td>';
     html += '<a class="action-link" onclick="viewDeviceDetail(\''+d.id+'\')">详情</a> ';
     html += '<a class="action-link" onclick="openPersonnelDialog(\''+d.id+'\')">编辑人员</a> ';

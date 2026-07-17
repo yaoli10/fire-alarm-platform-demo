@@ -76,12 +76,12 @@ body{font-family:var(--font-sans);background:var(--color-bg);color:var(--color-t
 .stat-card .stat-value{font-size:28px;font-weight:700;color:var(--color-text-primary);line-height:1.2}
 .stat-card .stat-label{font-size:var(--text-sm);color:var(--color-text-secondary)}
 .stat-card.total .stat-value{color:var(--color-primary)}
-.stat-card.pending .stat-value{color:var(--state-warning)}
+.stat-card.pending .stat-value{color:var(--state-error)}
 .stat-card.processing .stat-value{color:var(--color-primary)}
 .stat-card.done .stat-value{color:var(--state-success)}
 .stat-icon{width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;margin-left:auto;flex-shrink:0}
 .stat-icon.total-icon{background:var(--color-primary-bg);color:var(--color-primary)}
-.stat-icon.pending-icon{background:var(--state-warning-bg);color:var(--state-warning)}
+.stat-icon.pending-icon{background:var(--state-error-bg);color:var(--state-error)}
 .stat-icon.processing-icon{background:var(--color-primary-bg);color:var(--color-primary)}
 .stat-icon.done-icon{background:var(--state-success-bg);color:var(--state-success)}
 .filter-section{background:var(--color-surface);border:1px solid var(--color-border);border-radius:var(--radius-lg);padding:16px 20px;margin-bottom:16px}
@@ -113,7 +113,7 @@ body{font-family:var(--font-sans);background:var(--color-bg);color:var(--color-t
 .alarm-card-img{position:relative;width:100%;height:160px;overflow:hidden;background:var(--color-bg)}
 .alarm-card-img img{width:100%;height:100%;object-fit:cover}
 .alarm-status-badge{position:absolute;top:8px;right:8px;padding:3px 10px;border-radius:var(--radius-full);font-size:var(--text-xs);font-weight:var(--font-medium);color:#fff;backdrop-filter:blur(4px)}
-.alarm-status-badge.pushed{background:rgba(59,130,246,.85)}
+.alarm-status-badge.failed{background:rgba(220,38,38,.85)}
 .alarm-status-badge.unhandled{background:rgba(245,158,11,.85)}
 .alarm-status-badge.completed{background:rgba(22,163,74,.85)}
 .alarm-type-badge{position:absolute;bottom:8px;left:8px;padding:3px 10px;border-radius:var(--radius-full);font-size:var(--text-xs);font-weight:var(--font-medium);color:#fff;backdrop-filter:blur(4px);background:rgba(0,0,0,.6)}
@@ -247,7 +247,7 @@ body{font-family:var(--font-sans);background:var(--color-bg);color:var(--color-t
   </div>
   <div class="stats-grid">
     <div class="stat-card total"><div style="display:flex;align-items:center;justify-content:space-between"><div><div class="stat-label">今日告警总数</div><div class="stat-value" id="statTotal">256</div></div><div class="stat-icon total-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg></div></div></div>
-    <div class="stat-card pending"><div style="display:flex;align-items:center;justify-content:space-between"><div><div class="stat-label">已推送</div><div class="stat-value" id="statPending">45</div></div><div class="stat-icon pending-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2L11 13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></div></div></div>
+    <div class="stat-card pending"><div style="display:flex;align-items:center;justify-content:space-between"><div><div class="stat-label">推送失败</div><div class="stat-value" id="statPending">45</div></div><div class="stat-icon pending-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2L11 13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></div></div></div>
     <div class="stat-card processing"><div style="display:flex;align-items:center;justify-content:space-between"><div><div class="stat-label">未处理</div><div class="stat-value" id="statProcessing">18</div></div><div class="stat-icon processing-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div></div></div>
     <div class="stat-card done"><div style="display:flex;align-items:center;justify-content:space-between"><div><div class="stat-label">已完成</div><div class="stat-value" id="statDone">193</div></div><div class="stat-icon done-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div></div></div>
   </div>
@@ -257,7 +257,7 @@ body{font-family:var(--font-sans);background:var(--color-bg);color:var(--color-t
       <input type="text" class="filter-input" placeholder="设备SN" id="filterDeviceSN" style="min-width:160px" />
       <select class="filter-select" id="filterOrg" style="min-width:140px"><option value="">全部组织</option><option value="org1">消防器材厂</option><option value="org2">化工厂</option><option value="org3">电子厂</option></select>
       <select class="filter-select" id="filterAlarmType" style="min-width:130px"><option value="">全部类型</option><option value="fire">火灾告警</option><option value="smoke">烟雾告警</option><option value="temp">温度异常</option><option value="equipment">设备故障</option><option value="video">视频丢失</option></select>
-      <select class="filter-select" id="filterStatus" style="min-width:130px"><option value="">全部状态</option><option value="pushed">已推送</option><option value="unhandled">未处理</option><option value="completed">已完成</option></select>
+      <select class="filter-select" id="filterStatus" style="min-width:130px"><option value="">全部状态</option><option value="failed">推送失败</option><option value="unhandled">未处理</option><option value="completed">已完成</option></select>
       <input type="date" class="filter-date" id="filterDateStart" value="2026-07-01" />
       <span style="color:var(--color-text-muted);font-size:var(--text-sm)">至</span>
       <input type="date" class="filter-date" id="filterDateEnd" value="2026-07-12" />
@@ -304,7 +304,7 @@ body{font-family:var(--font-sans);background:var(--color-bg);color:var(--color-t
         <div class="timeline" id="d-timeline">
           <div class="timeline-item"><div class="timeline-dot done"></div><div><div class="t-title">告警触发</div><div class="t-time">2026-07-12 09:32:15</div></div></div>
           <div class="timeline-item"><div class="timeline-dot done"></div><div><div class="t-title">已确认</div><div class="t-time">2026-07-12 09:35:20</div></div></div>
-          <div class="timeline-item"><div class="timeline-dot done"></div><div><div class="t-title">已推送</div><div class="t-time">2026-07-12 09:35:20</div></div></div>
+          <div class="timeline-item"><div class="timeline-dot done"></div><div><div class="t-title">推送失败</div><div class="t-time">2026-07-12 09:35:20</div></div></div>
           <div class="timeline-item"><div class="timeline-dot"></div><div><div class="t-title" style="color:var(--color-text-muted)">待处理</div><div class="t-time">--</div></div></div>
           <div class="timeline-item"><div class="timeline-dot"></div><div><div class="t-title" style="color:var(--color-text-muted)">已完成</div><div class="t-time">--</div></div></div>
         </div>
@@ -332,15 +332,15 @@ body{font-family:var(--font-sans);background:var(--color-bg);color:var(--color-t
 </div>
 <div class="toast-container" id="toastContainer"></div>
 <script>
-var stats={total:256,pushed:45,unhandled:18,completed:193};
+var stats={total:256,failed:45,unhandled:18,completed:193};
 var alarmTypes=[{key:'fire',label:'火灾告警',color:'#dc2626'},{key:'smoke',label:'烟雾告警',color:'#f59e0b'},{key:'temp',label:'温度异常',color:'#ea580c'},{key:'equipment',label:'设备故障',color:'#6b7280'},{key:'video',label:'视频丢失',color:'#8b5cf6'}];
-var statusMap={pushed:{label:'已推送',cls:'blue',badgeCls:'pushed'},unhandled:{label:'未处理',cls:'orange',badgeCls:'unhandled'},completed:{label:'已完成',cls:'green',badgeCls:'completed'}};
+var statusMap={failed:{label:'推送失败',cls:'red',badgeCls:'failed'},unhandled:{label:'未处理',cls:'orange',badgeCls:'unhandled'},completed:{label:'已完成',cls:'green',badgeCls:'completed'}};
 var orgs=['消防器材厂','化工厂','电子厂'];
 var deviceSNs=['SN-CAM-001','SN-SMK-003','SN-TMP-005','SN-CAM-007','SN-CAM-002','SN-SMK-004','SN-TMP-006','SN-CAM-008','SN-CAM-009','SN-SMK-010','SN-CAM-011','SN-TMP-012','SN-SMK-013','SN-CAM-014','SN-SMK-015'];
 var devices=['1号厂房摄像头-01','2号仓库烟感-03','3号楼温感-05','4号车间摄像头-07','厂区入口摄像头-02','化学品库烟感-04','配电房温感-06','办公楼摄像头-08','消防通道摄像头-09','地下车库烟感-10','5号生产线摄像头-11','污水处理站温感-12','成品仓库烟感-13','锅炉房摄像头-14','食堂烟感-15'];
 var reviewers=['张伟','李明','王芳','赵刚','孙磊','周婷','吴强','陈洁'];
 var allData=[];
-var statusKeys=['pushed','unhandled','completed'];
+var statusKeys=['failed','unhandled','completed'];
 for(var i=0;i<256;i++){var tp=alarmTypes[i%alarmTypes.length];var st=statusMap[statusKeys[i%statusKeys.length]];var d=new Date(2026,6,12,9,30,15);d.setMinutes(d.getMinutes()-i*17);allData.push({id:i+1,alarmId:'ALM20260712'+String(i+1).padStart(3,'0'),type:tp,status:st,device:devices[i%devices.length],sn:deviceSNs[i%deviceSNs.length],org:orgs[i%orgs.length],time:formatDateTime(d),reviewer:reviewers[i%reviewers.length]});}
 function formatDateTime(d){var y=d.getFullYear(),m=String(d.getMonth()+1).padStart(2,'0'),dd=String(d.getDate()).padStart(2,'0');var h=String(d.getHours()).padStart(2,'0'),min=String(d.getMinutes()).padStart(2,'0'),s=String(d.getSeconds()).padStart(2,'0');return y+'-'+m+'-'+dd+' '+h+':'+min+':'+s;}
 var currentPage=1,pageSize=10;

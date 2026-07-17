@@ -209,32 +209,34 @@ body{font-family:var(--font-sans);background:var(--color-bg);color:var(--color-t
 <div class="page-card" style="padding:16px 20px">
   <div class="filter-bar" style="margin-bottom:0">
     <div class="filter-group">
-      <label class="filter-label">状态</label>
-      <select class="filter-select" id="filterStatus">
+      <label class="filter-label">客户类型</label>
+      <select class="filter-select" id="filterType">
         <option value="">全部</option>
-        <option value="正常">正常</option>
-        <option value="过期">过期</option>
-        <option value="停用">停用</option>
+        <option value="企业">企业</option>
+        <option value="政府">政府</option>
+        <option value="园区">园区</option>
       </select>
     </div>
     <div class="filter-group">
-      <label class="filter-label">行业</label>
-      <select class="filter-select" id="filterIndustry">
-        <option value="">全部行业</option>
-        <option value="消防器材">消防器材</option>
-        <option value="化工">化工</option>
-        <option value="电子">电子</option>
-        <option value="纺织">纺织</option>
-        <option value="建材">建材</option>
-        <option value="家具">家具</option>
+      <label class="filter-label">客户名称</label>
+      <input class="filter-input" id="filterName" placeholder="客户名称">
+    </div>
+    <div class="filter-group">
+      <label class="filter-label">所属组织</label>
+      <select class="filter-select" id="filterOrg">
+        <option value="">全部</option>
+        <option value="消防器材厂">消防器材厂</option>
+        <option value="化工厂">化工厂</option>
+        <option value="电子厂">电子厂</option>
       </select>
     </div>
     <div class="filter-group">
-      <label class="filter-label">关键词</label>
-      <input class="filter-input" id="filterKeyword" placeholder="客户名称/信用代码">
+      <label class="filter-label">联系方式</label>
+      <input class="filter-input" id="filterContact" placeholder="手机号/邮箱">
     </div>
     <div style="display:flex;gap:8px;align-self:flex-end">
       <button class="btn-sm btn-primary" onclick="filterTenants()">搜索</button>
+      <button class="btn-sm btn-outline" onclick="resetTenantFilter()">重置</button>
       <button class="btn-sm btn-primary" style="background:var(--state-success)" onclick="openTenantDialog()">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
         新增客户
@@ -249,10 +251,10 @@ body{font-family:var(--font-sans);background:var(--color-bg);color:var(--color-t
     <table class="data-table">
       <thead>
         <tr>
+          <th>客户类型</th>
           <th>客户名称</th>
-          <th>统一社会信用代码</th>
-          <th>所属区域</th>
-          <th>行业</th>
+          <th>所属组织</th>
+          <th>联系方式</th>
           <th>设备数</th>
           <th>状态</th>
           <th>服务到期日</th>
@@ -281,35 +283,29 @@ body{font-family:var(--font-sans);background:var(--color-bg);color:var(--color-t
     </div>
     <div class="dialog-body">
       <div class="form-field">
+        <div class="dialog-label">客户类型</div>
+        <select class="dialog-select" id="dialogTenantType">
+          <option value="企业">企业</option>
+          <option value="政府">政府</option>
+          <option value="园区">园区</option>
+        </select>
+      </div>
+      <div class="form-field">
         <div class="dialog-label">客户名称</div>
         <input class="dialog-input" id="dialogTenantName" placeholder="请输入客户名称">
       </div>
-      <div class="form-field">
-        <div class="dialog-label">统一社会信用代码</div>
-        <input class="dialog-input" id="dialogCreditCode" placeholder="请输入统一社会信用代码">
-      </div>
       <div class="form-row">
         <div class="form-field">
-          <div class="dialog-label">所属区域</div>
-          <select class="dialog-select" id="dialogRegion">
-            <option value="杭州市">杭州市</option>
-            <option value="宁波市">宁波市</option>
-            <option value="温州市">温州市</option>
-            <option value="嘉兴市">嘉兴市</option>
-            <option value="绍兴市">绍兴市</option>
-            <option value="金华市">金华市</option>
+          <div class="dialog-label">所属组织</div>
+          <select class="dialog-select" id="dialogOrg">
+            <option value="消防器材厂">消防器材厂</option>
+            <option value="化工厂">化工厂</option>
+            <option value="电子厂">电子厂</option>
           </select>
         </div>
         <div class="form-field">
-          <div class="dialog-label">行业</div>
-          <select class="dialog-select" id="dialogIndustry">
-            <option value="消防器材">消防器材</option>
-            <option value="化工">化工</option>
-            <option value="电子">电子</option>
-            <option value="纺织">纺织</option>
-            <option value="建材">建材</option>
-            <option value="家具">家具</option>
-          </select>
+          <div class="dialog-label">联系方式</div>
+          <input class="dialog-input" id="dialogContact" placeholder="手机号">
         </div>
       </div>
       <div class="form-field">
@@ -377,25 +373,27 @@ function toggleUser(e){e.stopPropagation();document.getElementById('userDropdown
 document.addEventListener('click',function(){var bd=document.getElementById('bellDropdown');if(bd)bd.classList.remove('show');var ud=document.getElementById('userDropdown');if(ud)ud.classList.remove('show')});
 
 var tenants = [
-  {name:'杭州萧山消防器材厂',credit:'91330109MA2XXXXX',region:'杭州市',industry:'消防器材',devices:32,status:'正常',expiry:'2027-06-30'},
-  {name:'宁波北仑化工厂',credit:'91330206MA1XXXXX',region:'宁波市',industry:'化工',devices:48,status:'正常',expiry:'2027-03-15'},
-  {name:'温州龙湾电子厂',credit:'91330303MA3XXXXX',region:'温州市',industry:'电子',devices:25,status:'正常',expiry:'2027-01-20'},
-  {name:'嘉兴南湖纺织厂',credit:'91330402MA4XXXXX',region:'嘉兴市',industry:'纺织',devices:18,status:'过期',expiry:'2026-05-01'},
-  {name:'绍兴越城建材厂',credit:'91330602MA5XXXXX',region:'绍兴市',industry:'建材',devices:22,status:'停用',expiry:'2026-08-15'},
-  {name:'金华婺城家具厂',credit:'91330702MA6XXXXX',region:'金华市',industry:'家具',devices:15,status:'正常',expiry:'2027-09-30'}
+  {name:'杭州萧山消防器材厂',credit:'91330109MA2XXXXX',region:'杭州市',industry:'消防器材',devices:32,status:'正常',expiry:'2027-06-30',tenantType:'企业',org:'消防器材厂',contact:'13800001001'},
+  {name:'宁波北仑化工厂',credit:'91330206MA1XXXXX',region:'宁波市',industry:'化工',devices:48,status:'正常',expiry:'2027-03-15',tenantType:'企业',org:'化工厂',contact:'13900002002'},
+  {name:'温州龙湾电子厂',credit:'91330303MA3XXXXX',region:'温州市',industry:'电子',devices:25,status:'正常',expiry:'2027-01-20',tenantType:'企业',org:'电子厂',contact:'15000003003'},
+  {name:'嘉兴南湖纺织厂',credit:'91330402MA4XXXXX',region:'嘉兴市',industry:'纺织',devices:18,status:'过期',expiry:'2026-05-01',tenantType:'企业',org:'消防器材厂',contact:'18600004004'},
+  {name:'绍兴越城建材厂',credit:'91330602MA5XXXXX',region:'绍兴市',industry:'建材',devices:22,status:'停用',expiry:'2026-08-15',tenantType:'园区',org:'化工厂',contact:'13700005005'},
+  {name:'金华婺城家具厂',credit:'91330702MA6XXXXX',region:'金华市',industry:'家具',devices:15,status:'正常',expiry:'2027-09-30',tenantType:'企业',org:'电子厂',contact:'15800006006'}
 ];
 
 var editingTenant = null;
 var renewingIdx = null;
 
 function renderTenantTable(){
-  var statusFilter = document.getElementById('filterStatus').value;
-  var industryFilter = document.getElementById('filterIndustry').value;
-  var keyword = document.getElementById('filterKeyword').value.trim().toLowerCase();
+  var typeFilter = document.getElementById('filterType').value;
+  var nameFilter = document.getElementById('filterName').value.trim().toLowerCase();
+  var orgFilter = document.getElementById('filterOrg').value;
+  var contactFilter = document.getElementById('filterContact').value.trim().toLowerCase();
   var filtered = tenants.filter(function(t){
-    if(statusFilter && t.status!==statusFilter) return false;
-    if(industryFilter && t.industry!==industryFilter) return false;
-    if(keyword && t.name.toLowerCase().indexOf(keyword)===-1 && t.credit.toLowerCase().indexOf(keyword)===-1) return false;
+    if(typeFilter && t.tenantType!==typeFilter) return false;
+    if(nameFilter && t.name.toLowerCase().indexOf(nameFilter)===-1) return false;
+    if(orgFilter && t.org!==orgFilter) return false;
+    if(contactFilter && t.contact.indexOf(contactFilter)===-1) return false;
     return true;
   });
   var html = '';
@@ -403,10 +401,10 @@ function renderTenantTable(){
     var statusCls = t.status==='正常'?'green':t.status==='过期'?'orange':'red';
     var statusHtml = '<span class="status-tag '+statusCls+'"><span class="status-dot '+statusCls+'"></span>'+t.status+'</span>';
     html += '<tr>';
+    html += '<td><span class="status-tag blue">'+t.tenantType+'</span></td>';
     html += '<td style="font-weight:500">'+t.name+'</td>';
-    html += '<td style="font-family:monospace;font-size:var(--text-xs);color:var(--color-text-secondary)">'+t.credit+'</td>';
-    html += '<td>'+t.region+'</td>';
-    html += '<td>'+t.industry+'</td>';
+    html += '<td>'+t.org+'</td>';
+    html += '<td style="font-family:monospace;font-size:var(--text-sm)">'+t.contact+'</td>';
     html += '<td>'+t.devices+'</td>';
     html += '<td>'+statusHtml+'</td>';
     html += '<td style="color:var(--color-text-secondary)">'+t.expiry+'</td>';
@@ -427,6 +425,14 @@ function renderTenantTable(){
 
 function filterTenants(){renderTenantTable();}
 
+function resetTenantFilter(){
+  document.getElementById('filterType').value='';
+  document.getElementById('filterName').value='';
+  document.getElementById('filterOrg').value='';
+  document.getElementById('filterContact').value='';
+  renderTenantTable();
+}
+
 function viewTenant(idx){
   showToast('客户详情: '+tenants[idx].name,'info');
 }
@@ -435,18 +441,18 @@ function openTenantDialog(tenant){
   editingTenant = tenant || null;
   if(tenant){
     document.getElementById('tenantDialogTitle').textContent = '编辑客户';
+    document.getElementById('dialogTenantType').value = tenant.tenantType;
     document.getElementById('dialogTenantName').value = tenant.name;
-    document.getElementById('dialogCreditCode').value = tenant.credit;
-    document.getElementById('dialogRegion').value = tenant.region;
-    document.getElementById('dialogIndustry').value = tenant.industry;
+    document.getElementById('dialogOrg').value = tenant.org;
+    document.getElementById('dialogContact').value = tenant.contact;
     document.getElementById('dialogEndDate').value = tenant.expiry;
     document.getElementById('dialogRemark').value = '';
   } else {
     document.getElementById('tenantDialogTitle').textContent = '新增客户';
+    document.getElementById('dialogTenantType').selectedIndex = 0;
     document.getElementById('dialogTenantName').value = '';
-    document.getElementById('dialogCreditCode').value = '';
-    document.getElementById('dialogRegion').selectedIndex = 0;
-    document.getElementById('dialogIndustry').selectedIndex = 0;
+    document.getElementById('dialogOrg').selectedIndex = 0;
+    document.getElementById('dialogContact').value = '';
     document.getElementById('dialogStartDate').value = '';
     document.getElementById('dialogEndDate').value = '';
     document.getElementById('dialogRemark').value = '';
@@ -464,21 +470,21 @@ function editTenant(idx){
 }
 
 function saveTenant(){
+  var tenantType = document.getElementById('dialogTenantType').value;
   var name = document.getElementById('dialogTenantName').value.trim();
-  var credit = document.getElementById('dialogCreditCode').value.trim();
-  var region = document.getElementById('dialogRegion').value;
-  var industry = document.getElementById('dialogIndustry').value;
+  var org = document.getElementById('dialogOrg').value;
+  var contact = document.getElementById('dialogContact').value.trim();
   var endDate = document.getElementById('dialogEndDate').value;
-  if(!name||!credit){showToast('请填写完整信息','error');return;}
+  if(!name){showToast('请填写客户名称','error');return;}
   if(editingTenant){
+    editingTenant.tenantType = tenantType;
     editingTenant.name = name;
-    editingTenant.credit = credit;
-    editingTenant.region = region;
-    editingTenant.industry = industry;
+    editingTenant.org = org;
+    editingTenant.contact = contact;
     if(endDate) editingTenant.expiry = endDate;
     showToast('客户已更新','success');
   } else {
-    tenants.push({name:name,credit:credit,region:region,industry:industry,devices:0,status:'正常',expiry:endDate||'2027-12-31'});
+    tenants.push({name:name,tenantType:tenantType,org:org,contact:contact,devices:0,status:'正常',expiry:endDate||'2027-12-31'});
     showToast('客户已创建','success');
   }
   closeTenantDialog();

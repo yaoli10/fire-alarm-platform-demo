@@ -273,12 +273,18 @@ body{font-family:var(--font-sans);background:var(--color-bg);color:var(--color-t
       <option value="孙磊">孙磊</option>
       <option value="周婷">周婷</option>
     </select>
+    <input type="text" class="filter-input" placeholder="设备名称" id="filterDevice" style="min-width:150px">
+    <input type="text" class="filter-input" placeholder="设备SN" id="filterSN" style="min-width:150px">
   </div>
   <div class="filter-row">
-    <input type="text" class="filter-input" placeholder="设备名称/告警编号" id="filterKeyword" style="min-width:200px">
-    <input type="date" class="filter-date" id="filterDateStart" value="2026-07-01">
+    <span style="font-size:var(--text-sm);color:var(--color-text-secondary);white-space:nowrap">告警时间</span>
+    <input type="date" class="filter-date" id="filterAlarmDateStart" value="2026-07-01">
     <span style="color:var(--color-text-muted);font-size:var(--text-sm)">至</span>
-    <input type="date" class="filter-date" id="filterDateEnd" value="2026-07-12">
+    <input type="date" class="filter-date" id="filterAlarmDateEnd" value="2026-07-12">
+    <span style="font-size:var(--text-sm);color:var(--color-text-secondary);white-space:nowrap;margin-left:8px">审核时间</span>
+    <input type="date" class="filter-date" id="filterAuditDateStart" value="2026-07-01">
+    <span style="color:var(--color-text-muted);font-size:var(--text-sm)">至</span>
+    <input type="date" class="filter-date" id="filterAuditDateEnd" value="2026-07-12">
     <button class="btn-sm btn-primary" onclick="applyFilter()">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
       搜索
@@ -363,32 +369,33 @@ body{font-family:var(--font-sans);background:var(--color-bg);color:var(--color-t
 
 <script>
 /* Mock data: 25 audit history records */
+var deviceSNs=['SN-CAM-001','SN-SMK-003','SN-TMP-005','SN-CAM-007','SN-CAM-002','SN-SMK-004','SN-TMP-006','SN-CAM-008','SN-CAM-009','SN-SMK-010','SN-CAM-011','SN-TMP-012','SN-SMK-013','SN-CAM-014','SN-SMK-015'];
 var auditData=[
-{id:1,alarmId:'ALM20260712-001',type:'火灾告警',typeColor:'#dc2626',device:'1号厂房摄像头-01',org:'消防器材厂',auditor:'张伟',result:'正报',auditTime:'2026-07-12 14:35:20',desc:'确认火情启动应急响应'},
-{id:2,alarmId:'ALM20260712-002',type:'烟雾告警',typeColor:'#f59e0b',device:'2号仓库烟感-03',org:'化工厂',auditor:'李明',result:'正报',auditTime:'2026-07-12 14:28:30',desc:'烟雾浓度超标已处理'},
-{id:3,alarmId:'ALM20260712-003',type:'温度异常',typeColor:'#ea580c',device:'3号楼温感-05',org:'电子厂',auditor:'王芳',result:'误报',auditTime:'2026-07-12 13:55:10',desc:'温度传感器误报'},
-{id:4,alarmId:'ALM20260712-004',type:'设备故障',typeColor:'#6b7280',device:'4号车间摄像头-07',org:'消防器材厂',auditor:'赵刚',result:'正报',auditTime:'2026-07-12 13:40:45',desc:'摄像头电源故障已维修'},
-{id:5,alarmId:'ALM20260711-005',type:'视频丢失',typeColor:'#8b5cf6',device:'厂区入口摄像头-02',org:'化工厂',auditor:'孙磊',result:'正报',auditTime:'2026-07-11 18:20:15',desc:'视频信号已恢复'},
-{id:6,alarmId:'ALM20260711-006',type:'火灾告警',typeColor:'#dc2626',device:'化学品库烟感-04',org:'电子厂',auditor:'周婷',result:'误报',auditTime:'2026-07-11 17:05:30',desc:'光影干扰导致误报'},
-{id:7,alarmId:'ALM20260711-007',type:'烟雾告警',typeColor:'#f59e0b',device:'配电房温感-06',org:'消防器材厂',auditor:'张伟',result:'正报',auditTime:'2026-07-11 15:42:20',desc:'配电房烟雾已疏散'},
-{id:8,alarmId:'ALM20260711-008',type:'温度异常',typeColor:'#ea580c',device:'办公楼摄像头-08',org:'化工厂',auditor:'李明',result:'误报',auditTime:'2026-07-11 14:30:10',desc:'空调制热导致温度异常'},
-{id:9,alarmId:'ALM20260710-009',type:'设备故障',typeColor:'#6b7280',device:'消防通道摄像头-09',org:'电子厂',auditor:'王芳',result:'正报',auditTime:'2026-07-10 16:55:40',desc:'设备线路老化已更换'},
-{id:10,alarmId:'ALM20260710-010',type:'火灾告警',typeColor:'#dc2626',device:'地下车库烟感-10',org:'消防器材厂',auditor:'赵刚',result:'正报',auditTime:'2026-07-10 11:22:35',desc:'车辆自燃已扑灭'},
-{id:11,alarmId:'ALM20260710-011',type:'烟雾告警',typeColor:'#f59e0b',device:'5号生产线摄像头-11',org:'化工厂',auditor:'孙磊',result:'误报',auditTime:'2026-07-10 10:15:20',desc:'焊接工序正常烟雾'},
-{id:12,alarmId:'ALM20260709-012',type:'视频丢失',typeColor:'#8b5cf6',device:'污水处理站温感-12',org:'电子厂',auditor:'周婷',result:'正报',auditTime:'2026-07-09 19:30:50',desc:'网线松动已重新连接'},
-{id:13,alarmId:'ALM20260709-013',type:'火灾告警',typeColor:'#dc2626',device:'成品仓库烟感-13',org:'消防器材厂',auditor:'张伟',result:'正报',auditTime:'2026-07-09 15:48:15',desc:'仓库杂物自燃已处理'},
-{id:14,alarmId:'ALM20260709-014',type:'温度异常',typeColor:'#ea580c',device:'锅炉房摄像头-14',org:'化工厂',auditor:'李明',result:'正报',auditTime:'2026-07-09 14:10:30',desc:'锅炉超温已降温处理'},
-{id:15,alarmId:'ALM20260708-015',type:'烟雾告警',typeColor:'#f59e0b',device:'食堂烟感-15',org:'电子厂',auditor:'王芳',result:'误报',auditTime:'2026-07-08 12:35:45',desc:'烹饪油烟触发误报'},
-{id:16,alarmId:'ALM20260708-016',type:'设备故障',typeColor:'#6b7280',device:'1号厂房摄像头-01',org:'消防器材厂',auditor:'赵刚',result:'正报',auditTime:'2026-07-08 09:20:10',desc:'镜头模糊已清洁维护'},
-{id:17,alarmId:'ALM20260707-017',type:'火灾告警',typeColor:'#dc2626',device:'2号仓库烟感-03',org:'化工厂',auditor:'孙磊',result:'正报',auditTime:'2026-07-07 22:15:30',desc:'夜间巡查发现明火已扑灭'},
-{id:18,alarmId:'ALM20260707-018',type:'视频丢失',typeColor:'#8b5cf6',device:'3号楼温感-05',org:'电子厂',auditor:'周婷',result:'误报',auditTime:'2026-07-07 16:42:20',desc:'系统升级临时中断'},
-{id:19,alarmId:'ALM20260706-019',type:'烟雾告警',typeColor:'#f59e0b',device:'4号车间摄像头-07',org:'消防器材厂',auditor:'张伟',result:'正报',auditTime:'2026-07-06 13:28:15',desc:'化学品泄漏烟雾已处理'},
-{id:20,alarmId:'ALM20260706-020',type:'温度异常',typeColor:'#ea580c',device:'厂区入口摄像头-02',org:'化工厂',auditor:'李明',result:'误报',auditTime:'2026-07-06 11:55:40',desc:'日照直射导致温度偏高'},
-{id:21,alarmId:'ALM20260705-021',type:'火灾告警',typeColor:'#dc2626',device:'化学品库烟感-04',org:'电子厂',auditor:'王芳',result:'正报',auditTime:'2026-07-05 17:30:25',desc:'电气短路引发火情已扑灭'},
-{id:22,alarmId:'ALM20260705-022',type:'设备故障',typeColor:'#6b7280',device:'配电房温感-06',org:'消防器材厂',auditor:'赵刚',result:'正报',auditTime:'2026-07-05 10:18:50',desc:'温感探头损坏已更换'},
-{id:23,alarmId:'ALM20260704-023',type:'烟雾告警',typeColor:'#f59e0b',device:'办公楼摄像头-08',org:'化工厂',auditor:'孙磊',result:'误报',auditTime:'2026-07-04 15:22:10',desc:'雾气进入探头触发'},
-{id:24,alarmId:'ALM20260703-024',type:'视频丢失',typeColor:'#8b5cf6',device:'消防通道摄像头-09',org:'电子厂',auditor:'周婷',result:'正报',auditTime:'2026-07-03 08:45:35',desc:'交换机故障已更换恢复'},
-{id:25,alarmId:'ALM20260702-025',type:'温度异常',typeColor:'#ea580c',device:'地下车库烟感-10',org:'消防器材厂',auditor:'张伟',result:'误报',auditTime:'2026-07-02 14:10:20',desc:'环境温度自然波动'}
+{id:1,alarmId:'ALM20260712-001',type:'火灾告警',typeColor:'#dc2626',device:'1号厂房摄像头-01',sn:'SN-CAM-001',org:'消防器材厂',auditor:'张伟',result:'正报',alarmTime:'2026-07-12 14:30:10',auditTime:'2026-07-12 14:35:20',desc:'确认火情启动应急响应'},
+{id:2,alarmId:'ALM20260712-002',type:'烟雾告警',typeColor:'#f59e0b',device:'2号仓库烟感-03',sn:'SN-SMK-003',org:'化工厂',auditor:'李明',result:'正报',alarmTime:'2026-07-12 14:22:15',auditTime:'2026-07-12 14:28:30',desc:'烟雾浓度超标已处理'},
+{id:3,alarmId:'ALM20260712-003',type:'温度异常',typeColor:'#ea580c',device:'3号楼温感-05',sn:'SN-TMP-005',org:'电子厂',auditor:'王芳',result:'误报',alarmTime:'2026-07-12 13:48:30',auditTime:'2026-07-12 13:55:10',desc:'温度传感器误报'},
+{id:4,alarmId:'ALM20260712-004',type:'设备故障',typeColor:'#6b7280',device:'4号车间摄像头-07',sn:'SN-CAM-007',org:'消防器材厂',auditor:'赵刚',result:'正报',alarmTime:'2026-07-12 13:32:20',auditTime:'2026-07-12 13:40:45',desc:'摄像头电源故障已维修'},
+{id:5,alarmId:'ALM20260711-005',type:'视频丢失',typeColor:'#8b5cf6',device:'厂区入口摄像头-02',sn:'SN-CAM-002',org:'化工厂',auditor:'孙磊',result:'正报',alarmTime:'2026-07-11 18:10:40',auditTime:'2026-07-11 18:20:15',desc:'视频信号已恢复'},
+{id:6,alarmId:'ALM20260711-006',type:'火灾告警',typeColor:'#dc2626',device:'化学品库烟感-04',sn:'SN-SMK-004',org:'电子厂',auditor:'周婷',result:'误报',alarmTime:'2026-07-11 16:55:10',auditTime:'2026-07-11 17:05:30',desc:'光影干扰导致误报'},
+{id:7,alarmId:'ALM20260711-007',type:'烟雾告警',typeColor:'#f59e0b',device:'配电房温感-06',sn:'SN-TMP-006',org:'消防器材厂',auditor:'张伟',result:'正报',alarmTime:'2026-07-11 15:30:50',auditTime:'2026-07-11 15:42:20',desc:'配电房烟雾已疏散'},
+{id:8,alarmId:'ALM20260711-008',type:'温度异常',typeColor:'#ea580c',device:'办公楼摄像头-08',sn:'SN-CAM-008',org:'化工厂',auditor:'李明',result:'误报',alarmTime:'2026-07-11 14:18:25',auditTime:'2026-07-11 14:30:10',desc:'空调制热导致温度异常'},
+{id:9,alarmId:'ALM20260710-009',type:'设备故障',typeColor:'#6b7280',device:'消防通道摄像头-09',sn:'SN-CAM-009',org:'电子厂',auditor:'王芳',result:'正报',alarmTime:'2026-07-10 16:42:30',auditTime:'2026-07-10 16:55:40',desc:'设备线路老化已更换'},
+{id:10,alarmId:'ALM20260710-010',type:'火灾告警',typeColor:'#dc2626',device:'地下车库烟感-10',sn:'SN-SMK-010',org:'消防器材厂',auditor:'赵刚',result:'正报',alarmTime:'2026-07-10 11:10:20',auditTime:'2026-07-10 11:22:35',desc:'车辆自燃已扑灭'},
+{id:11,alarmId:'ALM20260710-011',type:'烟雾告警',typeColor:'#f59e0b',device:'5号生产线摄像头-11',sn:'SN-CAM-011',org:'化工厂',auditor:'孙磊',result:'误报',alarmTime:'2026-07-10 10:02:15',auditTime:'2026-07-10 10:15:20',desc:'焊接工序正常烟雾'},
+{id:12,alarmId:'ALM20260709-012',type:'视频丢失',typeColor:'#8b5cf6',device:'污水处理站温感-12',sn:'SN-TMP-012',org:'电子厂',auditor:'周婷',result:'正报',alarmTime:'2026-07-09 19:18:40',auditTime:'2026-07-09 19:30:50',desc:'网线松动已重新连接'},
+{id:13,alarmId:'ALM20260709-013',type:'火灾告警',typeColor:'#dc2626',device:'成品仓库烟感-13',sn:'SN-SMK-013',org:'消防器材厂',auditor:'张伟',result:'正报',alarmTime:'2026-07-09 15:35:30',auditTime:'2026-07-09 15:48:15',desc:'仓库杂物自燃已处理'},
+{id:14,alarmId:'ALM20260709-014',type:'温度异常',typeColor:'#ea580c',device:'锅炉房摄像头-14',sn:'SN-CAM-014',org:'化工厂',auditor:'李明',result:'正报',alarmTime:'2026-07-09 13:58:15',auditTime:'2026-07-09 14:10:30',desc:'锅炉超温已降温处理'},
+{id:15,alarmId:'ALM20260708-015',type:'烟雾告警',typeColor:'#f59e0b',device:'食堂烟感-15',sn:'SN-SMK-015',org:'电子厂',auditor:'王芳',result:'误报',alarmTime:'2026-07-08 12:22:30',auditTime:'2026-07-08 12:35:45',desc:'烹饪油烟触发误报'},
+{id:16,alarmId:'ALM20260708-016',type:'设备故障',typeColor:'#6b7280',device:'1号厂房摄像头-01',sn:'SN-CAM-001',org:'消防器材厂',auditor:'赵刚',result:'正报',alarmTime:'2026-07-08 09:08:25',auditTime:'2026-07-08 09:20:10',desc:'镜头模糊已清洁维护'},
+{id:17,alarmId:'ALM20260707-017',type:'火灾告警',typeColor:'#dc2626',device:'2号仓库烟感-03',sn:'SN-SMK-003',org:'化工厂',auditor:'孙磊',result:'正报',alarmTime:'2026-07-07 22:02:15',auditTime:'2026-07-07 22:15:30',desc:'夜间巡查发现明火已扑灭'},
+{id:18,alarmId:'ALM20260707-018',type:'视频丢失',typeColor:'#8b5cf6',device:'3号楼温感-05',sn:'SN-TMP-005',org:'电子厂',auditor:'周婷',result:'误报',alarmTime:'2026-07-07 16:30:10',auditTime:'2026-07-07 16:42:20',desc:'系统升级临时中断'},
+{id:19,alarmId:'ALM20260706-019',type:'烟雾告警',typeColor:'#f59e0b',device:'4号车间摄像头-07',sn:'SN-CAM-007',org:'消防器材厂',auditor:'张伟',result:'正报',alarmTime:'2026-07-06 13:15:30',auditTime:'2026-07-06 13:28:15',desc:'化学品泄漏烟雾已处理'},
+{id:20,alarmId:'ALM20260706-020',type:'温度异常',typeColor:'#ea580c',device:'厂区入口摄像头-02',sn:'SN-CAM-002',org:'化工厂',auditor:'李明',result:'误报',alarmTime:'2026-07-06 11:42:25',auditTime:'2026-07-06 11:55:40',desc:'日照直射导致温度偏高'},
+{id:21,alarmId:'ALM20260705-021',type:'火灾告警',typeColor:'#dc2626',device:'化学品库烟感-04',sn:'SN-SMK-004',org:'电子厂',auditor:'王芳',result:'正报',alarmTime:'2026-07-05 17:18:10',auditTime:'2026-07-05 17:30:25',desc:'电气短路引发火情已扑灭'},
+{id:22,alarmId:'ALM20260705-022',type:'设备故障',typeColor:'#6b7280',device:'配电房温感-06',sn:'SN-TMP-006',org:'消防器材厂',auditor:'赵刚',result:'正报',alarmTime:'2026-07-05 10:05:35',auditTime:'2026-07-05 10:18:50',desc:'温感探头损坏已更换'},
+{id:23,alarmId:'ALM20260704-023',type:'烟雾告警',typeColor:'#f59e0b',device:'办公楼摄像头-08',sn:'SN-CAM-008',org:'化工厂',auditor:'孙磊',result:'误报',alarmTime:'2026-07-04 15:08:30',auditTime:'2026-07-04 15:22:10',desc:'雾气进入探头触发'},
+{id:24,alarmId:'ALM20260703-024',type:'视频丢失',typeColor:'#8b5cf6',device:'消防通道摄像头-09',sn:'SN-CAM-009',org:'电子厂',auditor:'周婷',result:'正报',alarmTime:'2026-07-03 08:32:20',auditTime:'2026-07-03 08:45:35',desc:'交换机故障已更换恢复'},
+{id:25,alarmId:'ALM20260702-025',type:'温度异常',typeColor:'#ea580c',device:'地下车库烟感-10',sn:'SN-SMK-010',org:'消防器材厂',auditor:'张伟',result:'误报',alarmTime:'2026-07-02 13:58:10',auditTime:'2026-07-02 14:10:20',desc:'环境温度自然波动'}
 ];
 
 var filteredData = auditData.slice();
@@ -399,22 +406,34 @@ function applyFilter() {
   var type = document.getElementById('filterType').value;
   var result = document.getElementById('filterResult').value;
   var auditor = document.getElementById('filterAuditor').value;
-  var keyword = document.getElementById('filterKeyword').value.trim().toLowerCase();
-  var dateStart = document.getElementById('filterDateStart').value;
-  var dateEnd = document.getElementById('filterDateEnd').value;
+  var device = document.getElementById('filterDevice').value.trim().toLowerCase();
+  var sn = document.getElementById('filterSN').value.trim().toLowerCase();
+  var alarmDateStart = document.getElementById('filterAlarmDateStart').value;
+  var alarmDateEnd = document.getElementById('filterAlarmDateEnd').value;
+  var auditDateStart = document.getElementById('filterAuditDateStart').value;
+  var auditDateEnd = document.getElementById('filterAuditDateEnd').value;
 
   filteredData = auditData.filter(function(r) {
     if (type && r.type !== type) return false;
     if (result && r.result !== result) return false;
     if (auditor && r.auditor !== auditor) return false;
-    if (keyword && r.device.toLowerCase().indexOf(keyword) < 0 && r.alarmId.toLowerCase().indexOf(keyword) < 0) return false;
-    if (dateStart) {
-      var auditDate = r.auditTime.split(' ')[0];
-      if (auditDate < dateStart) return false;
+    if (device && r.device.toLowerCase().indexOf(device) < 0) return false;
+    if (sn && r.sn.toLowerCase().indexOf(sn) < 0) return false;
+    if (alarmDateStart) {
+      var ad = r.alarmTime.split(' ')[0];
+      if (ad < alarmDateStart) return false;
     }
-    if (dateEnd) {
-      var auditDate2 = r.auditTime.split(' ')[0];
-      if (auditDate2 > dateEnd) return false;
+    if (alarmDateEnd) {
+      var ad2 = r.alarmTime.split(' ')[0];
+      if (ad2 > alarmDateEnd) return false;
+    }
+    if (auditDateStart) {
+      var cd = r.auditTime.split(' ')[0];
+      if (cd < auditDateStart) return false;
+    }
+    if (auditDateEnd) {
+      var cd2 = r.auditTime.split(' ')[0];
+      if (cd2 > auditDateEnd) return false;
     }
     return true;
   });
@@ -428,9 +447,12 @@ function resetFilter() {
   document.getElementById('filterType').value = '';
   document.getElementById('filterResult').value = '';
   document.getElementById('filterAuditor').value = '';
-  document.getElementById('filterKeyword').value = '';
-  document.getElementById('filterDateStart').value = '2026-07-01';
-  document.getElementById('filterDateEnd').value = '2026-07-12';
+  document.getElementById('filterDevice').value = '';
+  document.getElementById('filterSN').value = '';
+  document.getElementById('filterAlarmDateStart').value = '2026-07-01';
+  document.getElementById('filterAlarmDateEnd').value = '2026-07-12';
+  document.getElementById('filterAuditDateStart').value = '2026-07-01';
+  document.getElementById('filterAuditDateEnd').value = '2026-07-12';
   filteredData = auditData.slice();
   currentPage = 1;
   renderTable();
