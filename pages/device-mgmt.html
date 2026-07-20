@@ -351,27 +351,41 @@ body{font-family:var(--font-sans);background:var(--color-bg);color:var(--color-t
         <div class="dialog-label">设备名称</div>
         <input class="dialog-input" id="addDeviceName" placeholder="请输入设备名称">
       </div>
-      <div style="margin-bottom:16px">
-        <div class="dialog-label">设备类型</div>
-        <select class="dialog-select" id="addDeviceType">
-          <option value="摄像头">摄像头</option>
-          <option value="烟感">烟感</option>
-          <option value="温感">温感</option>
-          <option value="报警器">报警器</option>
-        </select>
+      <div style="display:flex;gap:12px;margin-bottom:16px">
+        <div style="flex:1">
+          <div class="dialog-label">所属组织</div>
+          <select class="dialog-select" id="addDeviceOrg">
+            <option value="消防器材厂">消防器材厂</option>
+            <option value="化工厂">化工厂</option>
+            <option value="电子厂">电子厂</option>
+          </select>
+        </div>
+        <div style="flex:1">
+          <div class="dialog-label">设备类型</div>
+          <select class="dialog-select" id="addDeviceType">
+            <option value="摄像头">摄像头</option>
+            <option value="烟感">烟感</option>
+            <option value="温感">温感</option>
+          </select>
+        </div>
       </div>
       <div style="margin-bottom:16px">
-        <div class="dialog-label">所属区域</div>
-        <select class="dialog-select" id="addDeviceArea">
-          <option value="A区">A区</option>
-          <option value="B区">B区</option>
-          <option value="C区">C区</option>
-          <option value="D区">D区</option>
-        </select>
+        <div class="dialog-label">设备SN</div>
+        <input class="dialog-input" id="addDeviceSN" placeholder="请输入设备SN，如 SN-CAM-001">
       </div>
-      <div>
-        <div class="dialog-label">安装位置</div>
-        <textarea class="dialog-textarea" id="addDeviceLocation" placeholder="请输入安装位置描述"></textarea>
+      <div style="display:flex;gap:12px;margin-bottom:16px">
+        <div style="flex:1">
+          <div class="dialog-label">IP</div>
+          <input class="dialog-input" id="addDeviceIP" placeholder="192.168.1.xxx">
+        </div>
+        <div style="flex:1">
+          <div class="dialog-label">端口号</div>
+          <input class="dialog-input" id="addDevicePort" placeholder="554">
+        </div>
+      </div>
+      <div style="margin-bottom:16px">
+        <div class="dialog-label">流媒体地址</div>
+        <input class="dialog-input" id="addDeviceStreamUrl" placeholder="rtsp://192.168.1.xxx:554/live（非摄像头可留空）">
       </div>
     </div>
     <div class="dialog-footer">
@@ -529,9 +543,12 @@ function savePersonnel(){
 // ======== ADD DEVICE DIALOG ========
 function openAddDeviceDialog(){
   document.getElementById('addDeviceName').value='';
-  document.getElementById('addDeviceLocation').value='';
+  document.getElementById('addDeviceOrg').selectedIndex=0;
   document.getElementById('addDeviceType').selectedIndex=0;
-  document.getElementById('addDeviceArea').selectedIndex=0;
+  document.getElementById('addDeviceSN').value='';
+  document.getElementById('addDeviceIP').value='';
+  document.getElementById('addDevicePort').value='';
+  document.getElementById('addDeviceStreamUrl').value='';
   document.getElementById('addDeviceOverlay').classList.add('show');
 }
 function closeAddDeviceDialog(){
@@ -539,11 +556,17 @@ function closeAddDeviceDialog(){
 }
 function saveNewDevice(){
   var name = document.getElementById('addDeviceName').value.trim();
+  var org = document.getElementById('addDeviceOrg').value;
   var type = document.getElementById('addDeviceType').value;
-  var area = document.getElementById('addDeviceArea').value;
+  var sn = document.getElementById('addDeviceSN').value.trim();
+  var ip = document.getElementById('addDeviceIP').value.trim();
+  var port = document.getElementById('addDevicePort').value.trim();
+  var streamUrl = document.getElementById('addDeviceStreamUrl').value.trim();
   if(!name){showToast('请输入设备名称','error');return;}
+  if(!sn){showToast('请输入设备SN','error');return;}
+  if(!ip){showToast('请输入IP地址','error');return;}
   var newId = 'DEV-' + String(devices.length+1).padStart(3,'0');
-  devices.push({id:newId,name:name,type:type,area:area,status:'在线',personnelCount:0,personnel:{level1:[],level2:[],level3:[]}});
+  devices.push({id:newId,name:name,org:org,sn:sn,ip:ip,port:port||'554',streamUrl:streamUrl||'--',type:type,area:'--',status:'在线',personnelCount:0,personnel:{level1:[],level2:[],level3:[]}});
   closeAddDeviceDialog();
   renderDeviceTable();
   showToast('设备已添加: '+newId,'success');
