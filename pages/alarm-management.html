@@ -76,13 +76,13 @@ body{font-family:var(--font-sans);background:var(--color-bg);color:var(--color-t
 .stat-card .stat-value{font-size:28px;font-weight:700;color:var(--color-text-primary);line-height:1.2}
 .stat-card .stat-label{font-size:var(--text-sm);color:var(--color-text-secondary)}
 .stat-card.total .stat-value{color:var(--color-primary)}
-.stat-card.pending .stat-value{color:var(--state-error)}
-.stat-card.processing .stat-value{color:var(--color-primary)}
+.stat-card.pushed .stat-value{color:var(--state-info)}
+.stat-card.processing .stat-value{color:var(--state-warning)}
 .stat-card.done .stat-value{color:var(--state-success)}
 .stat-icon{width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;margin-left:auto;flex-shrink:0}
 .stat-icon.total-icon{background:var(--color-primary-bg);color:var(--color-primary)}
-.stat-icon.pending-icon{background:var(--state-error-bg);color:var(--state-error)}
-.stat-icon.processing-icon{background:var(--color-primary-bg);color:var(--color-primary)}
+.stat-icon.pushed-icon{background:var(--state-info-bg);color:var(--state-info)}
+.stat-icon.processing-icon{background:var(--state-warning-bg);color:var(--state-warning)}
 .stat-icon.done-icon{background:var(--state-success-bg);color:var(--state-success)}
 .filter-section{background:var(--color-surface);border:1px solid var(--color-border);border-radius:var(--radius-lg);padding:16px 20px;margin-bottom:16px}
 .filter-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
@@ -246,8 +246,8 @@ body{font-family:var(--font-sans);background:var(--color-bg);color:var(--color-t
     <div style="display:flex;gap:8px"><button class="btn-sm btn-outline" onclick="resetFilters()">重置</button></div>
   </div>
   <div class="stats-grid">
-    <div class="stat-card total"><div style="display:flex;align-items:center;justify-content:space-between"><div><div class="stat-label">今日告警总数</div><div class="stat-value" id="statTotal">256</div></div><div class="stat-icon total-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg></div></div></div>
-    <div class="stat-card pending"><div style="display:flex;align-items:center;justify-content:space-between"><div><div class="stat-label">推送失败</div><div class="stat-value" id="statPending">45</div></div><div class="stat-icon pending-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2L11 13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></div></div></div>
+    <div class="stat-card total"><div style="display:flex;align-items:center;justify-content:space-between"><div><div class="stat-label">今日告警</div><div class="stat-value" id="statTotal">256</div></div><div class="stat-icon total-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg></div></div></div>
+    <div class="stat-card pushed"><div style="display:flex;align-items:center;justify-content:space-between"><div><div class="stat-label">已推送</div><div class="stat-value" id="statPushed">211</div></div><div class="stat-icon pushed-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2L11 13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></div></div></div>
     <div class="stat-card processing"><div style="display:flex;align-items:center;justify-content:space-between"><div><div class="stat-label">未处理</div><div class="stat-value" id="statProcessing">18</div></div><div class="stat-icon processing-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div></div></div>
     <div class="stat-card done"><div style="display:flex;align-items:center;justify-content:space-between"><div><div class="stat-label">已完成</div><div class="stat-value" id="statDone">193</div></div><div class="stat-icon done-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div></div></div>
   </div>
@@ -304,7 +304,7 @@ body{font-family:var(--font-sans);background:var(--color-bg);color:var(--color-t
         <div class="timeline" id="d-timeline">
           <div class="timeline-item"><div class="timeline-dot done"></div><div><div class="t-title">告警触发</div><div class="t-time">2026-07-12 09:32:15</div></div></div>
           <div class="timeline-item"><div class="timeline-dot done"></div><div><div class="t-title">已确认</div><div class="t-time">2026-07-12 09:35:20</div></div></div>
-          <div class="timeline-item"><div class="timeline-dot done"></div><div><div class="t-title">推送失败</div><div class="t-time">2026-07-12 09:35:20</div></div></div>
+          <div class="timeline-item"><div class="timeline-dot done"></div><div><div class="t-title">已推送</div><div class="t-time">2026-07-12 09:35:20</div></div></div>
           <div class="timeline-item"><div class="timeline-dot"></div><div><div class="t-title" style="color:var(--color-text-muted)">待处理</div><div class="t-time">--</div></div></div>
           <div class="timeline-item"><div class="timeline-dot"></div><div><div class="t-title" style="color:var(--color-text-muted)">已完成</div><div class="t-time">--</div></div></div>
         </div>
@@ -332,7 +332,7 @@ body{font-family:var(--font-sans);background:var(--color-bg);color:var(--color-t
 </div>
 <div class="toast-container" id="toastContainer"></div>
 <script>
-var stats={total:256,failed:45,unhandled:18,completed:193};
+var stats={total:256,pushed:211,unhandled:18,completed:193};
 var alarmTypes=[{key:'fire',label:'火灾告警',color:'#dc2626'},{key:'smoke',label:'烟雾告警',color:'#f59e0b'},{key:'temp',label:'温度异常',color:'#ea580c'},{key:'equipment',label:'设备故障',color:'#6b7280'},{key:'video',label:'视频丢失',color:'#8b5cf6'}];
 var statusMap={failed:{label:'推送失败',cls:'red',badgeCls:'failed'},unhandled:{label:'未处理',cls:'orange',badgeCls:'unhandled'},completed:{label:'已完成',cls:'green',badgeCls:'completed'}};
 var orgs=['消防器材厂','化工厂','电子厂'];
