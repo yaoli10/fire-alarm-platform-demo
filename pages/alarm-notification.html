@@ -159,6 +159,10 @@ body{font-family:var(--font-sans);background:var(--color-bg);color:var(--color-t
 .form-select:focus{outline:none;border-color:var(--color-primary)}
 .form-row{display:flex;gap:12px}
 .form-row .form-group{flex:1}
+.org-check-list{display:flex;flex-wrap:wrap;gap:8px;padding:10px 12px;border:1px solid var(--color-border);border-radius:var(--radius-md);background:var(--color-bg);min-height:40px}
+.org-check-item{display:flex;align-items:center;gap:6px;padding:4px 12px;border:1px solid var(--color-border);border-radius:var(--radius-md);cursor:pointer;font-size:var(--text-sm);transition:all .15s;user-select:none}
+.org-check-item:hover{border-color:var(--color-primary)}
+.org-check-item.checked{background:var(--color-primary-bg);border-color:var(--color-primary);color:var(--color-primary)}
 .device-picker{border:1px solid var(--color-border);border-radius:var(--radius-md);max-height:200px;overflow-y:auto}
 .device-picker-header{padding:8px 12px;border-bottom:1px solid var(--color-border);position:sticky;top:0;background:var(--color-surface);z-index:1}
 .device-picker-header input{width:100%;border:none;outline:none;font-size:var(--text-sm);background:transparent;color:var(--color-text-primary)}
@@ -308,7 +312,7 @@ body{font-family:var(--font-sans);background:var(--color-bg);color:var(--color-t
           <th style="width:50px">序号</th>
           <th style="min-width:120px">任务名称</th>
           <th style="min-width:100px">关联告警类型</th>
-          <th style="min-width:80px">关联设备数</th>
+          <th style="min-width:80px">关联数量</th>
           <th style="min-width:80px">状态</th>
           <th style="min-width:120px">操作</th>
         </tr>
@@ -361,6 +365,13 @@ body{font-family:var(--font-sans);background:var(--color-bg);color:var(--color-t
         <span style="font-size:var(--text-xs);color:var(--color-text-muted)">按住 Ctrl/Cmd 可多选</span>
       </div>
       <div class="form-group">
+        <label class="form-label">关联方式<span class="required">*</span></label>
+        <select class="form-select" id="modalAssocType" onchange="onAssocTypeChange()">
+          <option value="device">关联设备</option>
+          <option value="org">关联组织</option>
+        </select>
+      </div>
+      <div class="form-group" id="assocDeviceGroup">
         <label class="form-label">关联设备<span class="required">*</span></label>
         <div class="device-picker" id="devicePicker">
           <div class="device-picker-header">
@@ -371,6 +382,10 @@ body{font-family:var(--font-sans);background:var(--color-bg);color:var(--color-t
           </div>
         </div>
         <div class="selected-devices" id="selectedDeviceChips"></div>
+      </div>
+      <div class="form-group" id="assocOrgGroup" style="display:none">
+        <label class="form-label">关联组织<span class="required">*</span></label>
+        <div class="org-check-list" id="orgCheckList"></div>
       </div>
       <div class="form-group">
         <label class="form-label">推送策略</label>
@@ -431,7 +446,9 @@ var taskList = [
     id:1,
     name:'火灾紧急推送',
     alarmType:{key:'fire',label:'火灾告警',color:'#dc2626'},
+    assocType:'device',
     devices:[{name:'1号厂房摄像头-01',sn:'SN-CAM-001',org:'消防器材厂'},{name:'2号仓库烟感-03',sn:'SN-SMK-003',org:'化工厂'},{name:'化学品库烟感-04',sn:'SN-SMK-004',org:'化工厂'},{name:'食堂烟感-15',sn:'SN-SMK-015',org:'电子厂'}],
+    orgs:[],
     strategy:'3级推送',
     strategyDetail:'L1:短信(张伟,王芳) → L2:短信+外呼(赵刚,孙磊) → L3:外呼(王强,吴刚)',
     pushTime:'00:00 - 23:59',
@@ -442,7 +459,9 @@ var taskList = [
     id:2,
     name:'烟雾常规推送',
     alarmType:{key:'smoke',label:'烟雾告警',color:'#f59e0b'},
+    assocType:'device',
     devices:[{name:'3号楼温感-05',sn:'SN-TMP-005',org:'消防器材厂'},{name:'地下车库烟感-10',sn:'SN-SMK-010',org:'电子厂'}],
+    orgs:[],
     strategy:'2级推送',
     strategyDetail:'L1:短信(李明) → L2:短信+外呼(赵刚)',
     pushTime:'08:00 - 22:00',
@@ -453,7 +472,9 @@ var taskList = [
     id:3,
     name:'温度异常预警',
     alarmType:{key:'temp',label:'温度异常',color:'#ea580c'},
+    assocType:'org',
     devices:[{name:'配电房温感-06',sn:'SN-TMP-006',org:'化工厂'},{name:'污水处理站温感-12',sn:'SN-TMP-012',org:'电子厂'},{name:'锅炉房摄像头-14',sn:'SN-CAM-014',org:'消防器材厂'}],
+    orgs:['化工厂','电子厂','消防器材厂'],
     strategy:'3级推送',
     strategyDetail:'L1:短信(周婷) → L2:短信+外呼(赵刚,孙磊) → L3:外呼(王强)',
     pushTime:'00:00 - 23:59',
@@ -464,7 +485,9 @@ var taskList = [
     id:4,
     name:'设备故障通知',
     alarmType:{key:'equipment',label:'设备故障',color:'#6b7280'},
+    assocType:'device',
     devices:[{name:'4号车间摄像头-07',sn:'SN-CAM-007',org:'消防器材厂'},{name:'办公楼摄像头-08',sn:'SN-CAM-008',org:'化工厂'}],
+    orgs:[],
     strategy:'2级推送',
     strategyDetail:'L1:弹窗(孙磊) → L2:短信+外呼(陈刚)',
     pushTime:'06:00 - 23:59',
@@ -475,7 +498,9 @@ var taskList = [
     id:5,
     name:'视频丢失告警',
     alarmType:{key:'video',label:'视频丢失',color:'#8b5cf6'},
+    assocType:'org',
     devices:[{name:'厂区入口摄像头-02',sn:'SN-CAM-002',org:'消防器材厂'},{name:'消防通道摄像头-09',sn:'SN-CAM-009',org:'电子厂'},{name:'5号生产线摄像头-11',sn:'SN-CAM-011',org:'化工厂'}],
+    orgs:['消防器材厂','电子厂','化工厂'],
     strategy:'1级推送',
     strategyDetail:'L1:弹窗(周婷)',
     pushTime:'00:00 - 23:59',
@@ -489,6 +514,8 @@ var currentPage = 1;
 var pageSize = 10;
 var expandedRowId = null;
 var selectedModalDevices = [];
+var selectedModalOrgs = [];
+var allOrgs = ['消防器材厂','化工厂','电子厂'];
 var modalStrategyLevels = [
   {methods:['sms'], personnel:{sms:['张伟']}}
 ];
@@ -565,7 +592,10 @@ function renderTable(){
     html+='<td>'+idx+'</td>';
     html+='<td style="font-weight:var(--font-medium);color:var(--color-text-primary)">'+t.name+'</td>';
     html+='<td><span class="alarm-type-tag" style="background:'+t.alarmType.color+'18;color:'+t.alarmType.color+'"><span style="width:6px;height:6px;border-radius:50%;background:'+t.alarmType.color+';display:inline-block"></span>'+t.alarmType.label+'</span></td>';
-    html+='<td><span class="device-count" onclick="event.stopPropagation();showToast(\'关联 '+t.devices.length+' 台设备\')">'+t.devices.length+' 台</span></td>';
+    var assocLabel=t.assocType==='org'?'关联组织':'关联设备';
+    var assocCount=t.assocType==='org'?(t.orgs||[]).length:t.devices.length;
+    var assocUnit=t.assocType==='org'?'个':'台';
+    html+='<td><span class="device-count" onclick="event.stopPropagation();showToast(\''+assocLabel+' '+assocCount+' '+assocUnit+'\')">'+assocCount+' '+assocUnit+'</span></td>';
     html+='<td><span class="status-toggle" onclick="event.stopPropagation();toggleTaskStatus('+t.id+')"><span class="status-dot '+statusCls+'"></span><span style="font-size:var(--text-sm);color:var(--color-text-primary)">'+statusText+'</span></span></td>';
     html+='<td onclick="event.stopPropagation()">';
     html+='<button class="action-btn" onclick="showToast(\'编辑功能开发中\',\'info\')">编辑</button> ';
@@ -657,10 +687,14 @@ function openNewTaskModal(){
   document.getElementById('modalEndTime').value='23:59';
   document.getElementById('modalStatusToggle').classList.add('on');
   document.getElementById('modalStatusLabel').textContent='启用';
+  document.getElementById('modalAssocType').value='device';
   selectedModalDevices=[];
+  selectedModalOrgs=[];
+  onAssocTypeChange();
   modalStrategyLevels=[{methods:['sms'],personnel:{sms:['张伟']}}];
   renderDeviceOptions();
   renderSelectedDeviceChips();
+  renderOrgCheckList();
   renderStrategyBuilder();
 }
 
@@ -669,6 +703,29 @@ function closeNewTaskModal(){
 }
 
 
+
+/* ===== Assoc type toggle ===== */
+function onAssocTypeChange(){
+  var type=document.getElementById('modalAssocType').value;
+  document.getElementById('assocDeviceGroup').style.display=type==='device'?'':'none';
+  document.getElementById('assocOrgGroup').style.display=type==='org'?'':'none';
+}
+
+function renderOrgCheckList(){
+  var html='';
+  allOrgs.forEach(function(org){
+    var checked=selectedModalOrgs.indexOf(org)>-1;
+    html+='<div class="org-check-item'+(checked?' checked':'')+'" onclick="toggleOrgCheck(\''+org+'\')">'+org+'</div>';
+  });
+  document.getElementById('orgCheckList').innerHTML=html;
+}
+
+function toggleOrgCheck(org){
+  var idx=selectedModalOrgs.indexOf(org);
+  if(idx>-1) selectedModalOrgs.splice(idx,1);
+  else selectedModalOrgs.push(org);
+  renderOrgCheckList();
+}
 
 /* Device picker */
 function renderDeviceOptions(){
@@ -804,9 +861,11 @@ function addModalLevel(){
 function confirmNewTask(){
   var name=document.getElementById('modalTaskName').value.trim();
   var typeKey=document.getElementById('modalAlarmType').value;
+  var assocType=document.getElementById('modalAssocType').value;
   if(!name){showToast('请输入任务名称','error');return}
   if(!typeKey){showToast('请选择告警类型','error');return}
-  if(selectedModalDevices.length===0){showToast('请选择关联设备','error');return}
+  if(assocType==='device' && selectedModalDevices.length===0){showToast('请选择关联设备','error');return}
+  if(assocType==='org' && selectedModalOrgs.length===0){showToast('请选择关联组织','error');return}
 
   var typeMap={
     fire:{key:'fire',label:'火灾告警',color:'#dc2626'},
@@ -844,7 +903,9 @@ function confirmNewTask(){
     id:nextTaskId++,
     name:name,
     alarmType:at,
-    devices:selectedModalDevices.slice(),
+    assocType:assocType,
+    devices:assocType==='device'?selectedModalDevices.slice():allDevices.filter(function(d){return selectedModalOrgs.indexOf(d.org)>-1}),
+    orgs:assocType==='org'?selectedModalOrgs.slice():[],
     strategy:stratText,
     strategyDetail:detailText,
     pushTime:pushTimeText,
