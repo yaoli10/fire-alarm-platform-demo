@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>告警详情 - 视联网消防告警运营平台</title>
+<link rel="stylesheet" href="../colors_and_type.css">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html{background:#f0f1f3}
+body{font-family:'PingFang SC','Microsoft YaHei',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f0f1f3;color:var(--color-text-primary);min-height:100vh;display:flex;justify-content:center;-webkit-font-smoothing:antialiased}
+
+/* phone frame */
+.phone-frame{width:100%;max-width:430px;min-height:100vh;background:var(--color-surface);position:relative;overflow-x:hidden;padding-bottom:72px}
+
+/* top nav */
+.top-nav{position:sticky;top:0;z-index:50;height:52px;background:var(--color-surface);border-bottom:1px solid var(--color-border);display:flex;align-items:center;justify-content:space-between;padding:0 var(--space-4);flex-shrink:0}
+.top-nav-left{display:flex;align-items:center;gap:8px;flex:1;min-width:0}
+.btn-back{width:36px;height:36px;display:flex;align-items:center;justify-content:center;border:none;background:none;cursor:pointer;border-radius:var(--radius-md);transition:background .15s;flex-shrink:0}
+.btn-back:active{background:var(--color-bg)}
+.btn-back svg{color:var(--color-text-primary)}
+.top-nav-title{font-size:var(--text-lg);font-weight:var(--font-semibold);color:var(--color-text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.top-nav-right{flex-shrink:0}
+.status-tag{display:inline-flex;align-items:center;height:24px;padding:0 10px;border-radius:99px;font-size:var(--text-xs);font-weight:var(--font-medium);white-space:nowrap}
+.status-tag.pending{background:var(--state-error-bg);color:var(--state-error)}
+.status-tag.done{background:var(--state-success-bg);color:var(--state-success)}
+
+/* video section */
+.video-section{position:relative;width:100%;aspect-ratio:16/9;background:#0a0e14;overflow:hidden;cursor:pointer}
+.video-section img{width:100%;height:100%;object-fit:cover;display:block}
+.video-overlay-top{position:absolute;top:0;left:0;right:0;display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:linear-gradient(180deg,rgba(0,0,0,.55) 0%,transparent 100%);z-index:2}
+.video-device-name{font-size:var(--text-xs);color:rgba(255,255,255,.9);display:flex;align-items:center;gap:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1;min-width:0}
+.video-online{display:inline-flex;align-items:center;gap:4px;flex-shrink:0}
+.video-online-dot{width:6px;height:6px;border-radius:50%;background:var(--state-success);flex-shrink:0}
+.video-online-text{font-size:var(--text-xs);color:rgba(255,255,255,.85);white-space:nowrap}
+.video-fullscreen-btn{width:28px;height:28px;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.15);border:none;border-radius:var(--radius-sm);cursor:pointer;flex-shrink:0;transition:background .15s}
+.video-fullscreen-btn:active{background:rgba(255,255,255,.3)}
+.video-fullscreen-btn svg{color:#fff}
+.video-overlay-bottom{position:absolute;bottom:0;left:0;right:0;display:flex;align-items:center;padding:10px 12px;background:linear-gradient(0deg,rgba(0,0,0,.55) 0%,transparent 100%);z-index:2}
+.video-timestamp{font-size:var(--text-xs);color:rgba(255,255,255,.8);white-space:nowrap}
+
+/* fullscreen overlay */
+.fullscreen-overlay{position:fixed;top:0;left:0;right:0;bottom:0;z-index:999;background:#000;display:none;flex-direction:column}
+.fullscreen-overlay.active{display:flex}
+.fullscreen-video{flex:1;position:relative}
+.fullscreen-video img{width:100%;height:100%;object-fit:cover;display:block}
+.fullscreen-close{position:absolute;top:12px;right:12px;width:40px;height:40px;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.2);border:none;border-radius:50%;cursor:pointer;z-index:1000;transition:background .15s}
+.fullscreen-close:active{background:rgba(255,255,255,.35)}
+.fullscreen-close svg{color:#fff}
+.fullscreen-info{position:absolute;bottom:0;left:0;right:0;padding:16px;background:linear-gradient(0deg,rgba(0,0,0,.7) 0%,transparent 100%);z-index:2}
+.fullscreen-info .fs-device{font-size:var(--text-sm);color:rgba(255,255,255,.9);margin-bottom:4px}
+.fullscreen-info .fs-time{font-size:var(--text-xs);color:rgba(255,255,255,.6)}
+
+/* section spacing */
+.section-gap{height:var(--space-3)}
+
+/* alarm info card */
+.info-card{margin:0 var(--space-4);background:var(--color-surface);border:1px solid var(--color-border);border-radius:var(--radius-lg);box-shadow:var(--shadow-sm);padding:var(--space-4)}
+.info-card-title{font-size:var(--text-sm);font-weight:var(--font-semibold);color:var(--color-text-primary);margin-bottom:var(--space-3);display:flex;align-items:center;gap:6px}
+.info-card-title svg{color:var(--color-primary);flex-shrink:0}
+.alarm-type-row{display:flex;align-items:center;gap:var(--space-3);margin-bottom:var(--space-3)}
+.alarm-type-icon{width:36px;height:36px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#f97316,#ef4444);border-radius:var(--radius-md);flex-shrink:0}
+.alarm-type-icon svg{color:#fff}
+.alarm-type-text{flex:1;min-width:0}
+.alarm-type-label{font-size:var(--text-sm);color:var(--color-text-primary);font-weight:var(--font-medium)}
+.alarm-level-tag{display:inline-flex;align-items:center;height:22px;padding:0 8px;border-radius:99px;font-size:var(--text-xs);font-weight:var(--font-medium);background:var(--state-error-bg);color:var(--state-error);margin-top:2px}
+.info-row{display:flex;align-items:flex-start;padding:var(--space-2) 0;border-top:1px solid var(--color-border-light)}
+.info-row .label{width:72px;flex-shrink:0;font-size:var(--text-sm);color:var(--color-text-secondary);line-height:1.5}
+.info-row .value{flex:1;min-width:0;font-size:var(--text-sm);color:var(--color-text-primary);line-height:1.5;word-break:break-all}
+.info-row .value.mono{font-family:'SF Mono',Menlo,Monaco,Consolas,'PingFang SC',monospace;font-size:var(--text-xs)}
+
+/* screenshot section */
+.section-title{margin:0 var(--space-4);font-size:var(--text-sm);font-weight:var(--font-semibold);color:var(--color-text-primary);margin-bottom:var(--space-3)}
+.screenshot-scroll{display:flex;gap:var(--space-3);overflow-x:auto;padding:0 var(--space-4) var(--space-2);-webkit-overflow-scrolling:touch;scrollbar-width:none}
+.screenshot-scroll::-webkit-scrollbar{display:none}
+.screenshot-item{flex-shrink:0;width:200px;border-radius:var(--radius-lg);overflow:hidden;border:1px solid var(--color-border);background:var(--color-surface)}
+.screenshot-item img{width:100%;height:112px;object-fit:cover;display:block}
+.screenshot-time{padding:8px 10px;font-size:var(--text-xs);color:var(--color-text-secondary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* timeline */
+.timeline-card{margin:0 var(--space-4);background:var(--color-surface);border:1px solid var(--color-border);border-radius:var(--radius-lg);box-shadow:var(--shadow-sm);padding:var(--space-4) var(--space-4) var(--space-4) 20px}
+.timeline-card-title{font-size:var(--text-sm);font-weight:var(--font-semibold);color:var(--color-text-primary);margin-bottom:var(--space-4);display:flex;align-items:center;gap:6px}
+.timeline-card-title svg{color:var(--color-primary);flex-shrink:0}
+.timeline{position:relative;padding-left:20px}
+.timeline::before{content:'';position:absolute;left:5px;top:4px;bottom:4px;width:2px;background:var(--color-border);border-radius:1px}
+.timeline-item{position:relative;padding-bottom:var(--space-4)}
+.timeline-item:last-child{padding-bottom:0}
+.timeline-dot{position:absolute;left:-20px;top:3px;width:12px;height:12px;border-radius:50%;border:2px solid var(--color-border);background:var(--color-surface);z-index:1}
+.timeline-item.done .timeline-dot{border-color:var(--state-success);background:var(--state-success)}
+.timeline-item.active .timeline-dot{border-color:var(--color-primary);background:var(--color-primary);box-shadow:0 0 0 4px var(--color-primary-bg)}
+.timeline-item.pending .timeline-dot{border-color:var(--color-border);background:var(--color-surface)}
+.timeline-header{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.timeline-title{font-size:var(--text-sm);font-weight:var(--font-medium);color:var(--color-text-primary)}
+.timeline-item.active .timeline-title{color:var(--color-primary)}
+.timeline-item.pending .timeline-title{color:var(--color-text-muted)}
+.timeline-time{font-size:var(--text-xs);color:var(--color-text-muted);white-space:nowrap;flex-shrink:0}
+.timeline-desc{font-size:var(--text-xs);color:var(--color-text-secondary);margin-top:4px;line-height:1.4}
+.timeline-item.pending .timeline-desc{color:var(--color-text-muted)}
+.timeline-item.active .timeline-desc{color:var(--color-primary)}
+
+/* bottom action bar */
+.bottom-bar{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;background:var(--color-surface);border-top:1px solid var(--color-border);padding:12px var(--space-4);padding-bottom:calc(12px + env(safe-area-inset-bottom, 0px));display:flex;gap:var(--space-3);z-index:50}
+.btn{flex:1;height:44px;display:flex;align-items:center;justify-content:center;border-radius:var(--radius-md);font-size:var(--text-base);font-weight:var(--font-medium);cursor:pointer;border:none;transition:opacity .15s;white-space:nowrap}
+.btn:active{opacity:.75}
+.btn-outline{background:var(--color-surface);color:var(--color-text-secondary);border:1px solid var(--color-border)}
+.btn-primary{background:var(--color-primary);color:#fff}
+.btn-primary:active{background:var(--color-primary-dark)}
+
+/* toast */
+.toast{position:fixed;top:80px;left:50%;transform:translateX(-50%) translateY(-20px);padding:10px 24px;background:var(--color-text-primary);color:#fff;font-size:var(--text-sm);border-radius:var(--radius-md);box-shadow:var(--shadow-lg);z-index:9999;opacity:0;transition:all .3s ease;pointer-events:none;white-space:nowrap}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+</style>
+</head>
+<body>
+<div class="phone-frame">
+
+  <!-- top nav -->
+  <header class="top-nav">
+    <div class="top-nav-left">
+      <button class="btn-back" data-dom-id="btn-back" aria-label="返回">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+      </button>
+      <span class="top-nav-title">告警详情</span>
+    </div>
+    <div class="top-nav-right">
+      <span class="status-tag pending">未处理</span>
+    </div>
+  </header>
+
+  <!-- video area -->
+  <section class="video-section" id="videoArea">
+    <img src="../assets/fire-detection-camera.jpg" alt="实时视频">
+    <div class="video-overlay-top">
+      <span class="video-device-name">萧山消防器材厂-摄像头01</span>
+      <span class="video-online">
+        <span class="video-online-dot"></span>
+        <span class="video-online-text">在线</span>
+      </span>
+      <button class="video-fullscreen-btn" id="btnFullscreen" aria-label="全屏">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 3 21 3 21 9"></polyline><polyline points="9 21 3 21 3 15"></polyline><line x1="21" y1="3" x2="14" y2="10"></line><line x1="3" y1="21" x2="10" y2="14"></line></svg>
+      </button>
+    </div>
+    <div class="video-overlay-bottom">
+      <span class="video-timestamp">2026-07-21 14:32:18</span>
+    </div>
+  </section>
+
+  <!-- alarm info card -->
+  <div class="section-gap"></div>
+  <section class="info-card">
+    <div class="info-card-title">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+      告警信息
+    </div>
+    <div class="alarm-type-row">
+      <div class="alarm-type-icon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"></path></svg>
+      </div>
+      <div class="alarm-type-text">
+        <div class="alarm-type-label">烟雾告警</div>
+        <span class="alarm-level-tag">高</span>
+      </div>
+    </div>
+    <div class="info-row">
+      <span class="label">告警时间</span>
+      <span class="value">2026-07-21 14:32:18</span>
+    </div>
+    <div class="info-row">
+      <span class="label">所属组织</span>
+      <span class="value">萧山区 / 萧山消防器材厂</span>
+    </div>
+    <div class="info-row">
+      <span class="label">设备SN</span>
+      <span class="value mono">SN-FX-20240315-001</span>
+    </div>
+    <div class="info-row">
+      <span class="label">设备IP</span>
+      <span class="value mono">192.168.1.101</span>
+    </div>
+  </section>
+
+  <!-- screenshots -->
+  <div class="section-gap"></div>
+  <div class="section-title">告警截图</div>
+  <div class="screenshot-scroll">
+    <div class="screenshot-item">
+      <img src="../assets/fire-detection-camera.jpg" alt="告警截图1">
+      <div class="screenshot-time">2026-07-21 14:32:18</div>
+    </div>
+    <div class="screenshot-item">
+      <img src="../assets/fire-detection-camera.jpg" alt="告警截图2">
+      <div class="screenshot-time">2026-07-21 14:32:19</div>
+    </div>
+    <div class="screenshot-item">
+      <img src="../assets/fire-detection-camera.jpg" alt="告警截图3">
+      <div class="screenshot-time">2026-07-21 14:32:20</div>
+    </div>
+  </div>
+
+  <!-- timeline -->
+  <div class="section-gap"></div>
+  <section class="timeline-card">
+    <div class="timeline-card-title">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
+      处理进度
+    </div>
+    <div class="timeline">
+      <div class="timeline-item done">
+        <div class="timeline-dot"></div>
+        <div class="timeline-header">
+          <span class="timeline-title">告警触发</span>
+          <span class="timeline-time">2026-07-21 14:32:18</span>
+        </div>
+        <div class="timeline-desc">AI检测到烟雾</div>
+      </div>
+      <div class="timeline-item done">
+        <div class="timeline-dot"></div>
+        <div class="timeline-header">
+          <span class="timeline-title">告警推送</span>
+          <span class="timeline-time">2026-07-21 14:32:20</span>
+        </div>
+        <div class="timeline-desc">已推送至运营人员</div>
+      </div>
+      <div class="timeline-item active">
+        <div class="timeline-dot"></div>
+        <div class="timeline-header">
+          <span class="timeline-title">人工审核</span>
+          <span class="timeline-time">2026-07-21 14:35:10</span>
+        </div>
+        <div class="timeline-desc">待审核</div>
+      </div>
+      <div class="timeline-item pending">
+        <div class="timeline-dot"></div>
+        <div class="timeline-header">
+          <span class="timeline-title">工单派发</span>
+          <span class="timeline-time">待处理</span>
+        </div>
+        <div class="timeline-desc">等待上一步完成</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- bottom spacer for fixed bar -->
+  <div style="height:32px"></div>
+
+  <!-- bottom action bar -->
+  <div class="bottom-bar">
+    <button class="btn btn-outline" id="btnFalseAlarm">标记误报</button>
+    <button class="btn btn-primary" id="btnConfirm">确认告警</button>
+  </div>
+
+</div>
+
+<!-- toast element -->
+<div class="toast" id="toast"></div>
+
+<!-- fullscreen overlay -->
+<div class="fullscreen-overlay" id="fullscreenOverlay">
+  <div class="fullscreen-video">
+    <img src="../assets/fire-detection-camera.jpg" alt="实时视频全屏">
+    <button class="fullscreen-close" id="btnCloseFullscreen" aria-label="关闭全屏">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+    </button>
+    <div class="fullscreen-info">
+      <div class="fs-device">萧山消防器材厂-摄像头01</div>
+      <div class="fs-time">2026-07-21 14:32:18</div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  // back button
+  var btnBack = document.querySelector('[data-dom-id="btn-back"]');
+  if(btnBack){
+    btnBack.addEventListener('click', function(){
+      window.history.back();
+    });
+  }
+
+  // toast
+  var toastEl = document.getElementById('toast');
+  var toastTimer = null;
+  function showToast(msg){
+    clearTimeout(toastTimer);
+    toastEl.textContent = msg;
+    toastEl.classList.add('show');
+    toastTimer = setTimeout(function(){
+      toastEl.classList.remove('show');
+    }, 2000);
+  }
+
+  // fullscreen
+  var overlay = document.getElementById('fullscreenOverlay');
+  var btnFs = document.getElementById('btnFullscreen');
+  var btnCloseFs = document.getElementById('btnCloseFullscreen');
+  var videoArea = document.getElementById('videoArea');
+
+  function openFullscreen(){
+    overlay.classList.add('active');
+    document.body.style.overflow = 'hidden';
+  }
+  function closeFullscreen(){
+    overlay.classList.remove('active');
+    document.body.style.overflow = '';
+  }
+
+  if(btnFs) btnFs.addEventListener('click', function(e){
+    e.stopPropagation();
+    openFullscreen();
+  });
+  if(videoArea) videoArea.addEventListener('click', function(e){
+    if(e.target.closest('.video-fullscreen-btn')) return;
+    openFullscreen();
+  });
+  if(btnCloseFs) btnCloseFs.addEventListener('click', function(e){
+    e.stopPropagation();
+    closeFullscreen();
+  });
+  if(overlay) overlay.addEventListener('click', function(e){
+    if(e.target === overlay || e.target.closest('.fullscreen-close')){
+      closeFullscreen();
+    }
+  });
+
+  // bottom buttons
+  var btnFalse = document.getElementById('btnFalseAlarm');
+  var btnConfirm = document.getElementById('btnConfirm');
+  if(btnFalse) btnFalse.addEventListener('click', function(){
+    showToast('操作成功');
+  });
+  if(btnConfirm) btnConfirm.addEventListener('click', function(){
+    showToast('操作成功');
+  });
+})();
+</script>
+</body>
+</html>
