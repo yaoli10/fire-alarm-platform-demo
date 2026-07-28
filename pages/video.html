@@ -561,6 +561,29 @@ body{font-family:var(--font-sans);background:var(--color-bg);color:var(--color-t
     border-radius: 0;
     border: none;
   }
+.topbar-spacer{flex:1}
+/* Toast */
+.toast-container{position:fixed;top:70px;right:24px;z-index:700;display:flex;flex-direction:column;gap:8px}
+.toast{padding:12px 20px;border-radius:var(--radius-md);font-size:var(--text-sm);font-weight:var(--font-medium);box-shadow:var(--shadow-lg);display:flex;align-items:center;gap:8px;animation:toastIn .3s ease;min-width:240px}
+.toast.success{background:var(--state-success-bg);color:var(--state-success);border:1px solid rgba(22,163,74,.2)}
+.toast.error{background:var(--state-error-bg);color:var(--state-error);border:1px solid rgba(220,38,38,.2)}
+.toast.info{background:var(--state-info-bg);color:var(--state-info);border:1px solid rgba(59,130,246,.2)}
+@keyframes toastIn{from{opacity:0;transform:translateX(40px)}to{opacity:1;transform:translateX(0)}}
+@keyframes toastOut{from{opacity:1;transform:translateX(0)}to{opacity:0;transform:translateX(40px)}}
+/* Video cell right-click hint */
+.video-cell-hint{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:rgba(255,255,255,.5);font-size:11px;pointer-events:none;opacity:0;transition:opacity .2s;text-align:center;line-height:1.6}
+.video-cell:hover .video-cell-hint{opacity:1}
+/* Video cell close button */
+.video-cell-close{position:absolute;top:4px;right:4px;width:22px;height:22px;border-radius:50%;background:rgba(0,0,0,.6);color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;opacity:0;transition:opacity .15s,background .15s;z-index:10;border:none;font-size:14px;line-height:1}
+.video-cell:hover .video-cell-close{opacity:1}
+.video-cell-close:hover{background:var(--state-error)}
+/* Context menu */
+.video-ctx-menu{position:fixed;background:var(--color-surface);border:1px solid var(--color-border);border-radius:var(--radius-md);box-shadow:var(--shadow-lg);z-index:800;padding:4px 0;min-width:140px;display:none}
+.video-ctx-menu.show{display:block}
+.video-ctx-item{display:flex;align-items:center;gap:8px;padding:7px 14px;font-size:var(--text-sm);color:var(--color-text-primary);cursor:pointer;transition:background .1s}
+.video-ctx-item:hover{background:var(--color-primary-bg);color:var(--color-primary)}
+.video-ctx-item svg{flex-shrink:0;color:var(--color-text-muted)}
+.video-ctx-item:hover svg{color:var(--color-primary)}
 .content-area{flex:1;overflow-y:auto;padding:var(--space-6)}
 .factory-switcher{display:flex;align-items:center;gap:6px;padding:4px 10px;border-radius:var(--radius-md);cursor:pointer;transition:background .15s;font-size:var(--text-sm);color:var(--color-text-secondary)}
 .factory-switcher:hover{background:var(--color-bg)}
@@ -786,33 +809,33 @@ var deviceData = [
       { id:'xs', name:'萧山区', type:'org', expanded:false, children:[
         { id:'d1', name:'萧山消防器材厂-摄像头01', type:'device', status:'online' },
         { id:'d2', name:'萧山消防器材厂-摄像头02', type:'device', status:'online' },
-        { id:'d3', name:'萧山消防器材厂-烟感01', type:'device', status:'alarm' }
+        { id:'d3', name:'萧山消防器材厂-烟感探测器01', type:'device', status:'alarm' }
       ]},
       { id:'xc', name:'西湖区', type:'org', expanded:false, children:[
         { id:'d4', name:'西湖文化广场-摄像头01', type:'device', status:'online' },
         { id:'d5', name:'西湖文化广场-摄像头02', type:'device', status:'offline' }
       ]},
       { id:'bj', name:'滨江区', type:'org', expanded:false, children:[
-        { id:'d6', name:'滨江产业园-摄像头01', type:'device', status:'online' },
-        { id:'d7', name:'滨江产业园-摄像头02', type:'device', status:'online' }
+        { id:'d6', name:'滨江产业园-A区摄像头', type:'device', status:'online' },
+        { id:'d7', name:'滨江产业园-B区摄像头', type:'device', status:'online' }
       ]}
     ]},
     { id:'nb', name:'宁波市', type:'org', expanded:false, children:[
       { id:'bl', name:'北仑区', type:'org', expanded:false, children:[
-        { id:'d8', name:'北仑化工厂-摄像头01', type:'device', status:'online' },
-        { id:'d9', name:'北仑化工厂-摄像头02', type:'device', status:'alarm' }
+        { id:'d8', name:'北仑化工厂-一号库摄像头', type:'device', status:'online' },
+        { id:'d9', name:'北仑化工厂-二号库摄像头', type:'device', status:'alarm' }
       ]},
       { id:'yz', name:'鄞州区', type:'org', expanded:false, children:[
-        { id:'d10', name:'鄞州商务中心-摄像头01', type:'device', status:'online' }
+        { id:'d10', name:'鄞州商务中心-大厅摄像头', type:'device', status:'online' }
       ]}
     ]},
     { id:'wz', name:'温州市', type:'org', expanded:false, children:[
       { id:'lw', name:'龙湾区', type:'org', expanded:false, children:[
-        { id:'d11', name:'龙湾电子厂-摄像头01', type:'device', status:'online' },
-        { id:'d12', name:'龙湾电子厂-摄像头02', type:'device', status:'offline' }
+        { id:'d11', name:'龙湾电子厂-生产线摄像头', type:'device', status:'online' },
+        { id:'d12', name:'龙湾电子厂-仓库摄像头', type:'device', status:'offline' }
       ]},
       { id:'ou', name:'瓯海区', type:'org', expanded:false, children:[
-        { id:'d13', name:'瓯海工业区-摄像头01', type:'device', status:'online' }
+        { id:'d13', name:'瓯海工业区-入口摄像头', type:'device', status:'online' }
       ]}
     ]}
   ]}
@@ -947,11 +970,9 @@ function filterDeviceTree(keyword) {
 // ==================== Video Grid ====================
 var currentGrid = 4;
 var currentMode = 'live';
-var selectedDevice = null;
-var videoDevices = [
-  { id:'d1', name:'萧山消防器材厂-摄像头01', hasImage:true },
-  null, null, null
-];
+var selectedCellIndex = 0;
+var ctxTargetIndex = -1;
+var videoDevices = [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null];
 
 function getNow() {
   var d = new Date();
@@ -971,7 +992,8 @@ function renderVideoGrid() {
   for (var i = 0; i < currentGrid; i++) {
     var cell = document.createElement('div');
     cell.className = 'video-cell';
-    if (i === 0 && selectedDevice) cell.classList.add('selected');
+    cell.setAttribute('data-index', i);
+    if (i === selectedCellIndex) cell.classList.add('selected');
 
     var dev = videoDevices[i];
     if (dev && dev.hasImage) {
@@ -982,7 +1004,6 @@ function renderVideoGrid() {
       img.onerror = function() { this.style.display='none'; this.parentElement.querySelector('.video-cell-placeholder').style.display='flex'; };
       cell.appendChild(img);
 
-      // Placeholder in case image fails
       var ph = document.createElement('div');
       ph.className = 'video-cell-placeholder';
       ph.style.display = 'none';
@@ -993,6 +1014,19 @@ function renderVideoGrid() {
       info.className = 'video-cell-info';
       info.innerHTML = '<span class="video-cell-name">' + dev.name + '</span><span class="video-cell-time">' + getNow() + '</span>';
       cell.appendChild(info);
+
+      // Close button
+      var closeBtn = document.createElement('button');
+      closeBtn.className = 'video-cell-close';
+      closeBtn.innerHTML = '&times;';
+      closeBtn.title = '关闭视频';
+      (function(idx) {
+        closeBtn.onclick = function(e) {
+          e.stopPropagation();
+          closeVideoCell(idx);
+        };
+      })(i);
+      cell.appendChild(closeBtn);
     } else if (dev) {
       var ph2 = document.createElement('div');
       ph2.className = 'video-cell-placeholder';
@@ -1003,6 +1037,18 @@ function renderVideoGrid() {
       info2.className = 'video-cell-info';
       info2.innerHTML = '<span class="video-cell-name">' + dev.name + '</span><span class="video-cell-time">' + getNow() + '</span>';
       cell.appendChild(info2);
+
+      var closeBtn2 = document.createElement('button');
+      closeBtn2.className = 'video-cell-close';
+      closeBtn2.innerHTML = '&times;';
+      closeBtn2.title = '关闭视频';
+      (function(idx) {
+        closeBtn2.onclick = function(e) {
+          e.stopPropagation();
+          closeVideoCell(idx);
+        };
+      })(i);
+      cell.appendChild(closeBtn2);
     } else {
       var ph3 = document.createElement('div');
       ph3.className = 'video-cell-placeholder';
@@ -1010,19 +1056,41 @@ function renderVideoGrid() {
       cell.appendChild(ph3);
     }
 
-    // Hover overlay
-    var overlay = document.createElement('div');
-    overlay.className = 'video-cell-overlay';
-    overlay.innerHTML = '<div class="play-btn"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg></div>';
-    cell.appendChild(overlay);
+    // Right-click hint
+    if (dev) {
+      var hint = document.createElement('div');
+      hint.className = 'video-cell-hint';
+      hint.textContent = '双击关闭 | 右键更多操作';
+      cell.appendChild(hint);
+    }
 
     (function(index) {
-      cell.onclick = function() {
+      // Single click: select
+      cell.onclick = function(e) {
+        if (e.target.classList.contains('video-cell-close')) return;
         document.querySelectorAll('.video-cell.selected').forEach(function(c){ c.classList.remove('selected'); });
         cell.classList.add('selected');
+        selectedCellIndex = index;
         if (videoDevices[index]) {
-          showToast('已选中: ' + videoDevices[index].name, 'info');
+          showToast('已选中窗口' + (index+1) + ': ' + videoDevices[index].name, 'info');
         }
+      };
+      // Double click: close
+      cell.ondblclick = function(e) {
+        if (e.target.classList.contains('video-cell-close')) return;
+        if (videoDevices[index]) {
+          closeVideoCell(index);
+        }
+      };
+      // Right click: context menu
+      cell.oncontextmenu = function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        selectedCellIndex = index;
+        document.querySelectorAll('.video-cell.selected').forEach(function(c){ c.classList.remove('selected'); });
+        cell.classList.add('selected');
+        ctxTargetIndex = index;
+        showContextMenu(e.clientX, e.clientY, index);
       };
     })(i);
 
@@ -1035,14 +1103,105 @@ function setGrid(n) {
   document.querySelectorAll('.toolbar-btn[data-grid]').forEach(function(btn) {
     btn.classList.toggle('active', parseInt(btn.getAttribute('data-grid')) === n);
   });
+  if (selectedCellIndex >= n) selectedCellIndex = 0;
   renderVideoGrid();
 }
 
 function playDevice(node) {
-  selectedDevice = node;
-  videoDevices[0] = { id: node.id, name: node.name, hasImage: true };
+  if (node.status === 'offline') {
+    showToast('设备离线，无法播放', 'error');
+    return;
+  }
+  // Find next empty slot, starting from selectedCellIndex
+  var slot = -1;
+  for (var s = 0; s < currentGrid; s++) {
+    var idx = (selectedCellIndex + s) % currentGrid;
+    if (!videoDevices[idx]) { slot = idx; break; }
+  }
+  // If no empty slot, replace selected cell
+  if (slot === -1) {
+    slot = selectedCellIndex;
+  }
+  videoDevices[slot] = { id: node.id, name: node.name, hasImage: true };
+  selectedCellIndex = slot;
   renderVideoGrid();
-  showToast('正在播放: ' + node.name, 'info');
+  showToast('正在播放: ' + node.name + ' (窗口' + (slot+1) + ')', 'info');
+}
+
+function closeVideoCell(index) {
+  var name = videoDevices[index] ? videoDevices[index].name : '';
+  videoDevices[index] = null;
+  renderVideoGrid();
+  showToast('已关闭: ' + name, 'success');
+}
+
+// ==================== Context Menu ====================
+function showContextMenu(x, y, index) {
+  var menu = document.getElementById('videoCtxMenu');
+  var dev = videoDevices[index];
+  // Show/hide items based on whether cell has video
+  var items = menu.querySelectorAll('.video-ctx-item');
+  if (!dev) {
+    // No video in this cell - only allow playing
+    items[0].style.display = 'none'; // close
+    items[1].style.display = 'none'; // fullscreen
+    items[2].style.display = 'none'; // screenshot
+    items[3].style.display = 'none'; // ptz
+  } else {
+    items[0].style.display = ''; // close
+    items[1].style.display = ''; // fullscreen
+    items[2].style.display = ''; // screenshot
+    items[3].style.display = ''; // ptz
+  }
+
+  menu.style.left = x + 'px';
+  menu.style.top = y + 'px';
+  menu.classList.add('show');
+
+  // Adjust position if menu overflows
+  setTimeout(function() {
+    var rect = menu.getBoundingClientRect();
+    if (rect.right > window.innerWidth) menu.style.left = (x - rect.width) + 'px';
+    if (rect.bottom > window.innerHeight) menu.style.top = (y - rect.height) + 'px';
+  }, 0);
+}
+
+function hideContextMenu() {
+  document.getElementById('videoCtxMenu').classList.remove('show');
+}
+
+function ctxAction(action) {
+  hideContextMenu();
+  var idx = ctxTargetIndex;
+  var dev = videoDevices[idx];
+  if (!dev && action !== 'close') return;
+
+  switch(action) {
+    case 'close':
+      if (dev) closeVideoCell(idx);
+      break;
+    case 'fullscreen':
+      // Fullscreen single cell
+      var cell = document.querySelector('.video-cell[data-index="' + idx + '"]');
+      if (cell && cell.requestFullscreen) {
+        if (document.fullscreenElement) document.exitFullscreen();
+        else cell.requestFullscreen();
+      }
+      showToast('全屏播放: ' + dev.name, 'info');
+      break;
+    case 'screenshot':
+      showToast('抓拍成功: ' + dev.name, 'success');
+      break;
+    case 'ptz':
+      var panel = document.getElementById('ptzPanel');
+      var btn = document.getElementById('ptzToggleBtn');
+      if (!panel.classList.contains('open')) {
+        panel.classList.add('open');
+        btn.classList.add('active');
+      }
+      showToast('云台控制: ' + dev.name, 'info');
+      break;
+  }
 }
 
 // ==================== Mode Toggle ====================
@@ -1060,11 +1219,9 @@ function takeScreenshot() {
 
 // ==================== Clear All Videos ====================
 function clearAllVideos() {
-  document.querySelectorAll('.video-cell').forEach(function(cell) {
-    cell.innerHTML = '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;color:var(--color-text-muted);gap:8px"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg><span style="font-size:var(--text-xs)">无视频信号</span></div>';
-  });
   videoDevices = videoDevices.map(function() { return null; });
-  selectedDevice = null;
+  selectedCellIndex = 0;
+  renderVideoGrid();
   showToast('已清空所有视频窗口', 'success');
 }
 
@@ -1153,9 +1310,28 @@ document.addEventListener('DOMContentLoaded', function() {
       el.textContent = getNow();
     });
   }, 1000);
+
+  // Global click to hide context menu
+  document.addEventListener('click', function(e) {
+    if (!e.target.closest('.video-ctx-menu')) {
+      hideContextMenu();
+    }
+  });
+  document.addEventListener('contextmenu', function(e) {
+    if (!e.target.closest('.video-cell')) {
+      hideContextMenu();
+    }
+  });
 });
 </script>
-<div class="toast-container" id="toastContainer"></div>
+<div class="toast-container" id="toastContainer"><div class="toast" id="toast"><span id="toastMsg"></span></div></div>
+<!-- Context Menu -->
+<div class="video-ctx-menu" id="videoCtxMenu">
+  <div class="video-ctx-item" onclick="ctxAction('close')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg><span>关闭视频</span></div>
+  <div class="video-ctx-item" onclick="ctxAction('fullscreen')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg><span>全屏播放</span></div>
+  <div class="video-ctx-item" onclick="ctxAction('screenshot')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg><span>抓拍图片</span></div>
+  <div class="video-ctx-item" onclick="ctxAction('ptz')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 2v4m0 12v4M2 12h4m12 0h4"/></svg><span>云台控制</span></div>
+</div>
 <script>
 function toggleSidebar(){document.getElementById('sidebar').classList.toggle('collapsed')}
 function toggleMenuGroup(h){var a=h.querySelector('.group-arrow'),m=h.nextElementSibling;if(m){m.classList.toggle('closed');a.classList.toggle('open')}}
