@@ -253,7 +253,7 @@ body{font-family:var(--font-sans);background:var(--color-bg);color:var(--color-t
         <input class="dialog-input" id="orgName" placeholder="请输入组织名称">
       </div>
       <div style="margin-bottom:16px">
-        <div class="dialog-label">所属区域</div>
+        <div class="dialog-label">所属组织</div>
         <div style="display:flex;gap:8px">
           <select class="dialog-select" id="dialogProvince" onchange="onProvinceChange()" style="flex:1">
             <option value="">请选择省份</option>
@@ -440,12 +440,12 @@ function renderDetail(node){
   html += '<div class="stat-chip">负责人 <strong>'+node.leader+'</strong></div>';
   html += '<div class="stat-chip">人员 <strong>'+node.personnel+'人</strong></div>';
   if(node.region){
-    html += '<div class="stat-chip">所属区域 <strong>'+node.region+'</strong></div>';
+    html += '<div class="stat-chip">所属组织 <strong>'+node.region+'</strong></div>';
   }
   html += '</div>';
   if(node.children && node.children.length > 0){
     html += '<div class="page-card" style="padding:0;overflow:hidden">';
-    html += '<div style="overflow-x:auto"><table class="data-table"><thead><tr><th>名称</th><th>级别</th><th>所属区域</th><th>负责人</th><th>人数</th></tr></thead><tbody>';
+    html += '<div style="overflow-x:auto"><table class="data-table"><thead><tr><th>名称</th><th>级别</th><th>所属组织</th><th>负责人</th><th>人数</th></tr></thead><tbody>';
     node.children.forEach(function(ch){
       html += '<tr onclick="findAndSelect(\''+ch.name+'\')" style="cursor:pointer"><td style="font-weight:500">'+ch.name+'</td><td><span class="status-tag '+(levelColors[ch.level]||'blue')+'">'+ch.level+'</span></td><td>'+(ch.region||'-')+'</td><td>'+ch.leader+'</td><td>'+ch.personnel+'</td></tr>';
     });
